@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0
+// @version     1.0.1
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -210,7 +210,9 @@ if (permanentLinkTool != null) {
 } else {
     // If creating a new article, insert the template
     const heading = document.getElementById('firstHeading');
-    if (heading != null && heading.textContent.indexOf('Creating') !== -1) {
+    if (heading != null &&
+        heading.textContent.indexOf('Creating') !== -1 &&
+        heading.textContent.indexOf(getLangPrefix()) !== -1) {
         modEditPage();
     }
 }
