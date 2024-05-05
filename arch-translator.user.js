@@ -212,7 +212,7 @@ if (permanentLinkTool != null) {
     const heading = document.getElementById('firstHeading');
     if (heading != null &&
         heading.textContent.indexOf('Creating') !== -1 &&
-        heading.textContent.indexOf(getLangPrefix()) !== -1) {
+        getCurrentArticleTitle().indexOf(getLangPrefix()) !== -1) {
         modEditPage();
     }
 }
