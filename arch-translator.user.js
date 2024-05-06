@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.1
+// @version     1.0.2
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -14,6 +14,7 @@
 
 const STORAGE_GUID = '8efccd2b-73a5-4977-8099-985fc708c422';
 const LOCALIZED_LANG_NAME = "Polski";
+const USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE = true;
 
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
@@ -107,7 +108,10 @@ async function modCodeMirror(cmInstance) {
     const originalTitle = title.replace(langPostfix, '');
     const revisionId = getRevisionId(title);
 
-    const status = `{{TranslationStatus|${originalTitle}|${getISODate()}|${revisionId}}}`;
+    const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
+        ? `TranslationStatus (${LOCALIZED_LANG_NAME})`
+        : 'TranslationStatus';
+    const status = `{{${templateName}|${originalTitle}|${getISODate()}|${revisionId}}}`;
     console.debug(`Status template: ${status}`);
 
     // cmInstance.setValue(status);
