@@ -61,8 +61,8 @@ function insertAfterArticleHeader(articleText, value) {
     let newText = '';
     let index = 0;
     for (let line of lines) {
-        // lines like: {{text}} or [[text]]
-        if (/^{{.*}}$/g.test(line) || /^\[\[.*]]$/g.test(line)) {
+        // lines like: {{text}} or [[text]] or <...>
+        if (/^{{.*}}$/g.test(line) || /^\[\[.*]]$/g.test(line) || /^<.*>$/g.test(line)) {
             newText += line;
             newText += '\n';
 
