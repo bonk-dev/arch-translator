@@ -223,7 +223,8 @@ function parseSource(articleText, translationStatusTemplate, interlanguageLink) 
     let newText = parser.toArticleText();
 
     // add rest of the text;
-    lines.splice(0, index <= 0 ? 1 : 0);
+    lines.splice(0, index <= 0 ? 1 : index);
+
     return newText + lines.join('\n');
 }
 
