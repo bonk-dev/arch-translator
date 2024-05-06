@@ -14,7 +14,15 @@
 
 const STORAGE_GUID = '8efccd2b-73a5-4977-8099-985fc708c422';
 const LOCALIZED_LANG_NAME = "Polski";
+const LANG_SUBTAG = 'pl';
 const USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE = true;
+
+const LANG_SUBTAGS = [
+    "ar", "bs", "bg", "ca", "zh-hans", "zh-hant", "hr",
+    "cs", "da", "nl", "en", "fi", "fr", "de", "el", "he",
+    "hu", "id", "it", "ja", "ko", "lt", "pl", "pt", "ru",
+    "sr", "sk", "es", "sv", "th", "tr", "uk"
+];
 
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
@@ -55,30 +63,167 @@ async function fetchSource(articleTitle) {
     }
 }
 
-function insertAfterArticleHeader(articleText, value) {
-    const lines = articleText.split('\n');
+class LineParseResult {
+    static get redirect() {
+        return "redirect";
+    }
+    static get magicWord() {
+        return "magicWord";
+    }
+    static get category() {
+        return "category";
+    }
+    static get interlanguageLink() {
+        return "interlanguageLink";
+    }
+    static get template() {
+        return "template";
+    }
+    static get relatedArticle() {
+        return "relatedArticle";
+    }
+    static get endOfHeader() {
+        return "endOfHeader";
+    }
+}
 
-    let newText = '';
-    let index = 0;
-    for (let line of lines) {
-        // lines like: {{text}} or [[text]] or <...>
-        if (/^{{.*}}$/g.test(line) || /^\[\[.*]]$/g.test(line) || /^<.*>$/g.test(line)) {
-            newText += line;
-            newText += '\n';
+class ArticleHeaderParser {
+    constructor() {
+        this._redirects = [];
+        this._magicWords = [];
+        this._categories = [];
+        this._interlanguageLinks = {};
+        this._templates = [];
+        this._relatedArticleElements = [];
 
-            index += 1;
-        } else {
-            // header end
-            console.debug("End of header: " + line);
-            break;
+        // True if parser found a line starting with '[['
+        this._foundSquareBracketElement = false;
+    }
+
+    toArticleText() {
+        let sortedLinks = [];
+        for (let langSubtag of Object.keys(this._interlanguageLinks).sort()) {
+            sortedLinks.push(this._interlanguageLinks[langSubtag]);
+        }
+
+        // This follows https://wiki.archlinux.org/title/Help:Style#Layout
+        const finalArray = [
+            ...this._redirects, ...this._magicWords, ...this._categories,
+            ...sortedLinks, ...this._templates, ...this._relatedArticleElements
+        ];
+
+        return finalArray.join('\n') + '\n';
+    }
+
+    parse(line) {
+        if (line.startsWith("#REDIRECT")) {
+            this._redirects.push(line);
+            this._log("Found redirect: " + line);
+            return LineParseResult.redirect;
+        }
+
+        // Check if line is an interlanguage link
+        for (let subtag of LANG_SUBTAGS) {
+            if (line.startsWith(`[[${subtag}:`)) {
+                this.addInterlanguageLink(line, subtag);
+                this._foundSquareBracketElement = true;
+
+                return LineParseResult.interlanguageLink;
+            }
+        }
+
+        if (line.startsWith("[[Category")) {
+            this._addCategory(line);
+            this._foundSquareBracketElement = true;
+
+            return LineParseResult.category;
+        }
+        else if (line.startsWith("{{Related")) {
+            this._addRelatedArticleElement(line);
+
+            return LineParseResult.relatedArticle;
+        }
+        else if (line.startsWith("{{")) {
+            if (this._foundSquareBracketElement) {
+                this._addMagicWord(line);
+                return LineParseResult.magicWord;
+            }
+            else {
+                this.addTemplate(line);
+                return LineParseResult.template;
+            }
+        }
+        else {
+            return LineParseResult.endOfHeader;
         }
     }
 
-    newText += value;
-    newText += '\n';
+    addInterlanguageLink(line, subtag) {
+        this._log("Found interlanguage link: " + line);
+        this._interlanguageLinks[subtag] = line;
+    }
+
+    _addCategory(line) {
+        this._log("Found category: " + line);
+        this._categories.push(line);
+    }
+
+    _addMagicWord(line) {
+        this._log("Found magic word: " + line);
+        this._magicWords.push(line);
+    }
+
+    addTemplate(line) {
+        this._log("Found template: " + line);
+        this._templates.push(line);
+    }
+
+    _addRelatedArticleElement(line) {
+        this._log("Found related article element: " + line);
+        this._relatedArticleElements.push(line);
+    }
+
+    _log(msg) {
+        console.debug(`HeaderParser: ${msg}`);
+    }
+}
+
+function parseSource(articleText, translationStatusTemplate, interlanguageLink) {
+    const lines = articleText.split('\n');
+    const parser = new ArticleHeaderParser();
+
+    let index = 0;
+    let redirectFound = false;
+    for (let line of lines) {
+        const result = parser.parse(line);
+        if (result === LineParseResult.endOfHeader) {
+            break;
+        }
+        else if (result === LineParseResult.redirect) {
+            redirectFound = true;
+            break;
+        }
+
+        index += 1;
+    }
+
+    if (!redirectFound) {
+        if (interlanguageLink != null) {
+            parser.addInterlanguageLink(interlanguageLink, LANG_SUBTAG);
+        }
+
+        if (translationStatusTemplate != null) {
+            parser.addTemplate(translationStatusTemplate);
+        }
+    }
+    else {
+        console.debug("This is a redirect page. Skipping TranslationStatus and the interlanguage link");
+    }
+
+    let newText = parser.toArticleText();
 
     // add rest of the text;
-    lines.splice(0, index);
+    lines.splice(0, index <= 0 ? 1 : 0);
     return newText + lines.join('\n');
 }
 
@@ -122,8 +267,11 @@ async function modCodeMirror(cmInstance) {
     const originalSrc = await fetchSource(originalTitle);
 
     // Yes, we could just insert the TranslationStatus template at the beginning,
-    // but it would look bad
-    const srcWithStatus = insertAfterArticleHeader(originalSrc, status);
+    // but it would be against the wiki style
+    const srcWithStatus = parseSource(
+        originalSrc,
+        status,
+        `[[${LANG_SUBTAG}:${originalTitle}]]`);
     cmInstance.setValue(srcWithStatus);
 
     // cmInstance.setValue(originalSrc);
