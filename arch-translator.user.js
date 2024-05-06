@@ -209,7 +209,7 @@ function parseSource(articleText, translationStatusTemplate, interlanguageLink) 
 
     if (!redirectFound) {
         if (interlanguageLink != null) {
-            parser.addInterlanguageLink(interlanguageLink, LANG_SUBTAG);
+            parser.addInterlanguageLink(interlanguageLink, 'en');
         }
 
         if (translationStatusTemplate != null) {
@@ -271,7 +271,7 @@ async function modCodeMirror(cmInstance) {
     const srcWithStatus = parseSource(
         originalSrc,
         status,
-        `[[${LANG_SUBTAG}:${originalTitle}]]`);
+        `[[en:${originalTitle}]]`);
     cmInstance.setValue(srcWithStatus);
 
     // cmInstance.setValue(originalSrc);
