@@ -105,7 +105,9 @@ function removeRevisionId(translatedTitle) {
 async function modCodeMirror(cmInstance) {
     const title = getCurrentArticleTitle();
     const langPostfix = getLangPrefix();
-    const originalTitle = title.replace(langPostfix, '');
+    const originalTitle = title
+                            .replace(langPostfix, '')
+                            .replace('_', ' ');
     const revisionId = getRevisionId(title);
 
     const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
