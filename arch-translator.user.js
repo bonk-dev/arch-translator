@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.2
+// @version     1.0.3
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -87,7 +87,7 @@ class LineParseResult {
     }
 }
 
-class ArticleHeaderParser {
+class ArticleParser {
     constructor() {
         this._redirects = [];
         this._magicWords = [];
@@ -95,12 +95,24 @@ class ArticleHeaderParser {
         this._interlanguageLinks = {};
         this._templates = [];
         this._relatedArticleElements = [];
+        this._parsingContent = false;
 
         // True if parser found a line starting with '[['
         this._foundSquareBracketElement = false;
+
+        this._rawContentLines = [];
+
+        // e.g. :Category:System administration
+        this._categoryLinks = [];
+
+        // e.g. Installation guide
+        this._articleLinks = [];
+
+        // #System administration
+        this._headerLinks = [];
     }
 
-    toArticleText() {
+    get headerText() {
         let sortedLinks = [];
         for (let langSubtag of Object.keys(this._interlanguageLinks).sort()) {
             sortedLinks.push(this._interlanguageLinks[langSubtag]);
@@ -115,7 +127,33 @@ class ArticleHeaderParser {
         return finalArray.join('\n') + '\n';
     }
 
+    get contentText() {
+        return this._rawContentLines.join('\n');
+    }
+
+    get articleText() {
+        return this.headerText + this.contentText;
+    }
+
     parse(line) {
+        if (!this._parsingContent) {
+            const headerResult = this._parseHeaderLine(line);
+            if (headerResult === LineParseResult.endOfHeader || headerResult === LineParseResult.redirect) {
+                this._parsingContent = true;
+            }
+
+            return headerResult;
+        }
+        else {
+            return this._parseContentLine(line);
+        }
+    }
+
+    get localizableLinks() {
+        return [...this._categoryLinks, ...this._articleLinks]
+    }
+
+    _parseHeaderLine(line) {
         if (line.startsWith("#REDIRECT")) {
             this._redirects.push(line);
             this._log("Found redirect: " + line);
@@ -183,49 +221,75 @@ class ArticleHeaderParser {
         this._relatedArticleElements.push(line);
     }
 
+    _parseContentLine(line) {
+        this._rawContentLines.push(line);
+
+        // Match: [[text - cant contain square brackets]]
+        // Skips Wikipedia links
+        for (let match of line.matchAll(/\[\[(?!Wikipedia)([^\[\]]*)]]/g)) {
+            if (match[1].startsWith(':')) {
+                this._categoryLinks.push(match[1]);
+            }
+            else if (match[1].startsWith('#')) {
+                this._headerLinks.push(match[1]);
+            }
+            else {
+                this._articleLinks.push(match[1]);
+            }
+        }
+    }
+
     _log(msg) {
         console.debug(`HeaderParser: ${msg}`);
     }
 }
 
-function parseSource(articleText, translationStatusTemplate, interlanguageLink) {
-    const lines = articleText.split('\n');
-    const parser = new ArticleHeaderParser();
+class ParseSourceOptions {
+    statusTemplate
+    interlanguageLink
+    isCreating
+}
 
-    let index = 0;
+function parseSource(articleText, options) {
+    const lines = articleText.split('\n');
+    const parser = new ArticleParser();
+
     let redirectFound = false;
     for (let line of lines) {
         const result = parser.parse(line);
-        if (result === LineParseResult.endOfHeader) {
-            break;
-        }
-        else if (result === LineParseResult.redirect) {
+        if (result === LineParseResult.redirect) {
             redirectFound = true;
-            break;
         }
-
-        index += 1;
     }
 
-    if (!redirectFound) {
-        if (interlanguageLink != null) {
-            parser.addInterlanguageLink(interlanguageLink, 'en');
-        }
+    if (!options.isCreating) {
+        if (!redirectFound) {
+            if (options.interlanguageLink != null) {
+                parser.addInterlanguageLink(options.interlanguageLink, 'en');
+            }
 
-        if (translationStatusTemplate != null) {
-            parser.addTemplate(translationStatusTemplate);
+            if (options.statusTemplate != null) {
+                parser.addTemplate(options.statusTemplate);
+            }
+        }
+        else {
+            console.debug("This is a redirect page. Skipping TranslationStatus and the interlanguage link");
         }
     }
     else {
-        console.debug("This is a redirect page. Skipping TranslationStatus and the interlanguage link");
+        console.debug("Editing a page. Skipping TranslationStatus and the interlanguage link");
     }
 
-    let newText = parser.toArticleText();
+    findLocalizedArticles(parser.localizableLinks)
+        .then(() => console.debug("findLocalizedArticles done"));
 
-    // add rest of the text;
-    lines.splice(0, index <= 0 ? 1 : index);
+    return parser.articleText;
+}
 
-    return newText + lines.join('\n');
+async function findLocalizedArticles(links) {
+    for (let link of links) {
+        console.debug(`findLocalizedArticles link: ${link}`);
+    }
 }
 
 // Get&Set revision id for usage in template
@@ -248,38 +312,45 @@ function removeRevisionId(translatedTitle) {
 }
 
 // CodeMirror callback
-async function modCodeMirror(cmInstance) {
-    const title = getCurrentArticleTitle();
-    const langPostfix = getLangPrefix();
-    const originalTitle = title
-                            .replace(langPostfix, '')
-                            .replace('_', ' ');
-    const revisionId = getRevisionId(title);
+async function modCodeMirror(cmInstance, isCreating) {
+    let newSourceText = '';
+    if (isCreating) {
+        const title = getCurrentArticleTitle();
+        const langPostfix = getLangPrefix();
+        const originalTitle = title
+            .replace(langPostfix, '')
+            .replace('_', ' ');
+        const revisionId = getRevisionId(title);
 
-    const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
-        ? `TranslationStatus (${LOCALIZED_LANG_NAME})`
-        : 'TranslationStatus';
-    const status = `{{${templateName}|${originalTitle}|${getISODate()}|${revisionId}}}`;
-    console.debug(`Status template: ${status}`);
+        const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
+            ? `TranslationStatus (${LOCALIZED_LANG_NAME})`
+            : 'TranslationStatus';
+        const status = `{{${templateName}|${originalTitle}|${getISODate()}|${revisionId}}}`;
+        console.debug(`Status template: ${status}`);
 
-    // cmInstance.setValue(status);
+        console.debug("Fetching original source");
+        const originalSrc = await fetchSource(originalTitle);
 
-    console.debug("Fetching original source");
-    const originalSrc = await fetchSource(originalTitle);
+        // Yes, we could just insert the TranslationStatus template at the beginning,
+        // but it would be against the wiki style
 
-    // Yes, we could just insert the TranslationStatus template at the beginning,
-    // but it would be against the wiki style
-    const srcWithStatus = parseSource(
-        originalSrc,
-        status,
-        `[[en:${originalTitle}]]`);
-    cmInstance.setValue(srcWithStatus);
+        newSourceText = parseSource(originalSrc, {
+            statusTemplate: status,
+            interlanguageLink: `[[en:${originalTitle}]]`,
+            isCreating: true
+        });
+    }
+    else {
+        newSourceText = parseSource(cmInstance.getValue(), {
+            isCreating: false
+        });
+    }
 
-    // cmInstance.setValue(originalSrc);
+    cmInstance.setValue(newSourceText);
 }
 
 // run when the user opens up an edit article page
-function modEditPage() {
+function modEditPage(isCreating) {
     // Wait for CodeMirror init
     // Select the node that will be observed for mutations
     const targetNode = document.getElementById("editform");
@@ -303,7 +374,7 @@ function modEditPage() {
                 observer.disconnect();
 
                 const codeMirrorElement = mutation.addedNodes[0];
-                modCodeMirror(codeMirrorElement.CodeMirror)
+                modCodeMirror(codeMirrorElement.CodeMirror, isCreating)
                     .then(() => {
                         console.debug("modCodeMirror done");
                     });
@@ -365,9 +436,12 @@ if (permanentLinkTool != null) {
 } else {
     // If creating a new article, insert the template
     const heading = document.getElementById('firstHeading');
+    const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
+    const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
+
     if (heading != null &&
-        heading.textContent.indexOf('Creating') !== -1 &&
+        isEditing &&
         getCurrentArticleTitle().indexOf(getLangPrefix()) !== -1) {
-        modEditPage();
+        modEditPage(isCreating);
     }
 }
