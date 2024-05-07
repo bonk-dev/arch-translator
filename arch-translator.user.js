@@ -14,7 +14,6 @@
 
 const STORAGE_GUID = '8efccd2b-73a5-4977-8099-985fc708c422';
 const LOCALIZED_LANG_NAME = "Polski";
-const LANG_SUBTAG = 'pl';
 const USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE = true;
 
 const LANG_SUBTAGS = [
@@ -314,7 +313,7 @@ function removeRevisionId(translatedTitle) {
 
 // CodeMirror callback
 async function modCodeMirror(cmInstance, isCreating) {
-    let newSourceText = '';
+    let newSourceText;
     if (isCreating) {
         const title = getCurrentArticleTitle();
         const langPostfix = getLangPrefix();
