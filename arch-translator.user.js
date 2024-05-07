@@ -98,7 +98,7 @@ class ArticleParser {
         this._parsingContent = false;
 
         // True if parser found a line starting with '[['
-        this._foundSquareBracketElement = false;
+        this._parseMagicWords = true;
 
         this._rawContentLines = [];
 
@@ -164,7 +164,7 @@ class ArticleParser {
         for (let subtag of LANG_SUBTAGS) {
             if (line.startsWith(`[[${subtag}:`)) {
                 this.addInterlanguageLink(line, subtag);
-                this._foundSquareBracketElement = true;
+                this._parseMagicWords = false;
 
                 return LineParseResult.interlanguageLink;
             }
@@ -172,7 +172,7 @@ class ArticleParser {
 
         if (line.startsWith("[[Category")) {
             this._addCategory(line);
-            this._foundSquareBracketElement = true;
+            this._parseMagicWords = false;
 
             return LineParseResult.category;
         }
@@ -182,7 +182,7 @@ class ArticleParser {
             return LineParseResult.relatedArticle;
         }
         else if (line.startsWith("{{")) {
-            if (this._foundSquareBracketElement) {
+            if (this._parseMagicWords) {
                 this._addMagicWord(line);
                 return LineParseResult.magicWord;
             }
