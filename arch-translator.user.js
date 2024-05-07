@@ -192,6 +192,7 @@ class ArticleParser {
             }
         }
         else {
+            this._rawContentLines.push(line);
             return LineParseResult.endOfHeader;
         }
     }
