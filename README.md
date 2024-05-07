@@ -5,5 +5,10 @@ Scripts to make translating ArchWiki easier. This script assumes that you are tr
 Change LOCALIZED_LANG_NAME to your own language before use.
 
 ## Features
-- copies the original source
-- adds the TranslationStatus template
+- Copies and pastes the original source;
+- Inserts the [localized] ic|TranslationStatus template;
+- Inserts the English interlanguage link;
+- Sorts the header elements according to the ArchWiki layout.
+
+## Working on
+- Finding localized versions of linked articles
