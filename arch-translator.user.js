@@ -624,14 +624,16 @@ if (permanentLinkTool != null) {
     const heading = document.getElementById('firstHeading');
     const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
     const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
+    const isTranslating = getCurrentArticleTitle().indexOf(getLangPrefix()) !== -1;
 
     console.debug(`heading: ${heading}`);
     console.debug(`isEditing: ${isEditing}`);
     console.debug(`isCreating: ${isCreating}`);
+    console.debug(`isTranslating: ${isTranslating}`);
 
     if (heading != null &&
         isEditing &&
-        getCurrentArticleTitle().indexOf(getLangPrefix()) !== -1) {
+        isTranslating) {
         modEditPage(isCreating);
     }
 }
