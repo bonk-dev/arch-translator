@@ -113,8 +113,19 @@ class LineParseResult {
 
 class WikiLink {
     constructor(rawLink) {
+        // TODO: Handle redirects (mainly the English redirections, not the old-translation ones)
+
         const split = rawLink.split('|');
         this._link = split[0];
+        const headerSplit = this._link.split('#');
+        if (headerSplit.length > 1) {
+            this._link = headerSplit[0];
+            this._linkedHeader = headerSplit[1];
+        }
+        else {
+            this._linkedHeader = null;
+        }
+
         this._alias = split.length > 1
             ? split[1]
             : null;
