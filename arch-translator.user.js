@@ -23,6 +23,39 @@ const LANG_SUBTAGS = [
     "sr", "sk", "es", "sv", "th", "tr", "uk"
 ];
 
+const LANG_LOCALIZED_NAMES = {
+    "Arabic": "العربية",
+    "Bangla": "বাংলা",
+    "Bosnian": "Bosanski",
+    "Bulgarian": "Български",
+    "Cantonese": "粵語",
+    "Catalan": "Català",
+    "Chinese (Classical)": "文言文",
+    "Chinese (Simplified)": "简体中文",
+    "Chinese (Traditional)": "正體中文",
+    "Croatian": "Hrvatski",
+    "Czech": "Čeština",
+    "Danish": "Dansk",
+    "Dutch": "Nederlands",
+    "English": "English",
+    "Esperanto": "Esperanto",
+    "Finnish": "Suomi",
+    "French": "Français",
+    "German": "Deutsch",
+    "Greek": "Ελληνικά",
+    "Hebrew": "עברית",
+    "Hungarian": "Magyar",
+    "Indonesian": "Bahasa Indonesia",
+    "Italian": "Italiano",
+    "Japanese": "t日本語",
+    "Korean": "한국어",
+    "Lithuanian": "Lietuvių",
+    "Norwegian (Bokmål)": "Norsk Bokmål",
+    "Polish": "Polski",
+    "Portuguese": "Português",
+    "Romanian": "Română"
+}
+
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
         if (window.location.pathname.startsWith("/title/")) {
@@ -86,6 +119,38 @@ class LineParseResult {
     }
 }
 
+class WikiLink {
+    constructor(rawLink) {
+        const split = rawLink.split('|');
+        this._link = split[0];
+        this._alias = split.length > 1
+            ? split[1]
+            : null;
+
+        if (split[0].startsWith(':')) {
+            this._linkType = 'category';
+        }
+        else if (split[0].startsWith('#')) {
+            this._linkType = 'header';
+        }
+        else {
+            this._linkType = 'article';
+        }
+    }
+
+    get link() {
+        return this._link;
+    }
+
+    get alias() {
+        return this._alias;
+    }
+
+    get linkType() {
+        return this._linkType;
+    }
+}
+
 class ArticleParser {
     constructor() {
         this._redirects = [];
@@ -100,15 +165,7 @@ class ArticleParser {
         this._parseMagicWords = true;
 
         this._rawContentLines = [];
-
-        // e.g. :Category:System administration
-        this._categoryLinks = [];
-
-        // e.g. Installation guide
-        this._articleLinks = [];
-
-        // #System administration
-        this._headerLinks = [];
+        this._links = [];
     }
 
     get headerText() {
@@ -149,7 +206,11 @@ class ArticleParser {
     }
 
     get localizableLinks() {
-        return [...this._categoryLinks, ...this._articleLinks]
+        return [
+            ...this._links
+                .filter(l => l.linkType === 'category' || l.linkType === 'article')
+                .map(l => l.link)
+        ]
     }
 
     _parseHeaderLine(line) {
@@ -227,15 +288,10 @@ class ArticleParser {
         // Match: [[text - cant contain square brackets]]
         // Skips Wikipedia links
         for (let match of line.matchAll(/\[\[(?!Wikipedia)([^\[\]]*)]]/g)) {
-            if (match[1].startsWith(':')) {
-                this._categoryLinks.push(match[1]);
-            }
-            else if (match[1].startsWith('#')) {
-                this._headerLinks.push(match[1]);
-            }
-            else {
-                this._articleLinks.push(match[1]);
-            }
+            // TODO: Support subpages (e.g. dm-crypt/Device encryption)
+
+            const link = new WikiLink(match[1]);
+            this._links.push(link);
         }
     }
 
@@ -286,8 +342,39 @@ function parseSource(articleText, options) {
     return parser.articleText;
 }
 
+class LocalizedArticleFinder {
+    constructor() {
+        this._base = 'https://wiki.archlinux.org';
+
+        const names = Object.keys(LANG_LOCALIZED_NAMES)
+            .map(n => `(?:${n})`)
+            .join('|');
+        this._validLocalizedPrefixesRegex = new RegExp(`\((?:${names})\)`);
+    }
+
+    async checkIfLocalizedVersionExists(title) {
+        if (this._checkIfAlreadyLocalized(title)) return false;
+
+        const response = await fetch(`${this._base}/title/${title.replaceAll(' ', '_')}`);
+        if (response.ok) {
+            return true;
+        }
+        else if (response.status === 404) {
+            return false;
+        }
+
+        throw new Error("Invalid response status: " + response.status);
+    }
+
+    _checkIfAlreadyLocalized(title) {
+        return this._validLocalizedPrefixesRegex.test(title);
+    }
+}
+
 async function findLocalizedArticles(links) {
+    const finder = new LocalizedArticleFinder();
     for (let link of links) {
+        //await finder.checkIfLocalizedVersionExists(link);
         console.debug(`findLocalizedArticles link: ${link}`);
     }
 }
@@ -438,6 +525,10 @@ if (permanentLinkTool != null) {
     const heading = document.getElementById('firstHeading');
     const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
     const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
+
+    console.debug(`heading: ${heading}`);
+    console.debug(`isEditing: ${isEditing}`);
+    console.debug(`isCreating: ${isCreating}`);
 
     if (heading != null &&
         isEditing &&
