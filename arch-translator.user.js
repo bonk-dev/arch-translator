@@ -337,7 +337,10 @@ function parseSource(articleText, options) {
     }
 
     findLocalizedArticles(parser.localizableLinks)
-        .then(() => console.debug("findLocalizedArticles done"));
+        .then(r => {
+            console.debug("findLocalizedArticles done. result:");
+            console.debug(r);
+        });
 
     return parser.articleText;
 }
@@ -353,14 +356,19 @@ class LocalizedArticleFinder {
     }
 
     async checkIfLocalizedVersionExists(title) {
-        if (this._checkIfAlreadyLocalized(title)) return false;
+        if (this._checkIfAlreadyLocalized(title)) {
+            console.debug(`checkIfLocalizedVersionExists: already localized: ${title}`);
+            return false;
+        }
 
-        const response = await fetch(`${this._base}/title/${title.replaceAll(' ', '_')}`);
+        const localizedTitle = title + getLangPrefix();
+        const response = await fetch(
+            `${this._base}/title/${localizedTitle.replaceAll(' ', '_')}`);
         if (response.ok) {
-            return true;
+            return LocalizedLinkStatus.exists();
         }
         else if (response.status === 404) {
-            return false;
+            return LocalizedLinkStatus.notExists();
         }
 
         throw new Error("Invalid response status: " + response.status);
@@ -373,29 +381,117 @@ class LocalizedArticleFinder {
 
 async function findLocalizedArticles(links) {
     const finder = new LocalizedArticleFinder();
+    let result = {};
+
     for (let link of links) {
-        //await finder.checkIfLocalizedVersionExists(link);
-        console.debug(`findLocalizedArticles link: ${link}`);
+        // try cache first
+        const cachedStatus = getCachedLinkStatus(link);
+        if (cachedStatus === LocalizedLinkStatus.unknown()) {
+            console.debug(`findLocalizedArticles: cache NOT hit for link: ${link}. Fetching status...`);
+            const freshStatus = await finder.checkIfLocalizedVersionExists(link);
+
+            setCachedLinkStatus(link, freshStatus);
+            result[link] = freshStatus;
+        }
+        else {
+            console.debug(`findLocalizedArticles: cache HIT for link: ${link}. Status: ${cachedStatus}`);
+            result[link] = cachedStatus;
+        }
     }
+
+    return result;
 }
 
 // Get&Set revision id for usage in template
 // Todo: Use IndexedDB
-function getKey(translatedTitle) {
+function getRevisionIdKey(translatedTitle) {
     return `${STORAGE_GUID}_${translatedTitle}`;
 }
 
 function saveRevisionId(translatedTitle, revisionId) {
-    localStorage.setItem(getKey(translatedTitle), revisionId);
+    localStorage.setItem(getRevisionIdKey(translatedTitle), revisionId);
 }
 
 function getRevisionId(translatedTitle) {
     console.debug(`Get revision id: ${translatedTitle}`)
-    return localStorage.getItem(getKey(translatedTitle));
+    return localStorage.getItem(getRevisionIdKey(translatedTitle));
 }
 
 function removeRevisionId(translatedTitle) {
-    localStorage.removeItem(getKey(translatedTitle));
+    localStorage.removeItem(getRevisionIdKey(translatedTitle));
+}
+
+// Localized links cache implementation
+class LocalizedLinkStatus {
+    static unknown() {
+        return 'unknown';
+    }
+
+    static exists() {
+        return 'exists';
+    }
+
+    static notExists() {
+        return 'notExists';
+    }
+}
+
+function getCacheStatusKey(link) {
+    return `${STORAGE_GUID}_CACHE_${link}_STATUS`;
+}
+
+function getCacheExpirationKey(link) {
+    return `${STORAGE_GUID}_CACHE_${link}_EXPIRATION`;
+}
+
+function validateStatus(status) {
+    switch (status) {
+        case LocalizedLinkStatus.unknown():
+        case LocalizedLinkStatus.exists():
+        case LocalizedLinkStatus.notExists():
+            return true;
+        default:
+            return false;
+    }
+}
+
+function getCachedLinkStatus(link) {
+    const expirationDateString = localStorage.getItem(getCacheExpirationKey(link));
+    if (expirationDateString == null) {
+        return LocalizedLinkStatus.unknown();
+    }
+
+    const expirationDate = parseInt(expirationDateString);
+    if (expirationDate <= Date.now()) {
+        invalidateLinkCache(link);
+        return LocalizedLinkStatus.unknown();
+    }
+
+    const status = localStorage.getItem(getCacheStatusKey(link));
+    if (!validateStatus(status)) {
+        throw new Error(`Invalid cache status: ${status}`);
+    }
+
+    return status;
+}
+
+function setCachedLinkStatus(link, status) {
+    console.debug(`LinkCache: setting ${link}: ${status}`);
+
+    if (typeof status !== 'string') {
+        throw new Error('"status" must be a "string"');
+    }
+
+    const expirationDate = Date.now() + 21600000; // 6 hours
+    localStorage.setItem(getCacheExpirationKey(link), expirationDate.toString());
+    localStorage.setItem(getCacheStatusKey(link), status.toString());
+}
+
+function invalidateLinkCache(link) {
+    console.debug(`LinkCache: invalidating ${link}`);
+
+    localStorage.removeItem(getCacheExpirationKey(link));
+    localStorage.removeItem(getCacheStatusKey(link));
 }
 
 // CodeMirror callback
