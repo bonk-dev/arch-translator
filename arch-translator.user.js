@@ -152,6 +152,10 @@ class WikiLink {
     get linkType() {
         return this._linkType;
     }
+
+    get header() {
+        return this._linkedHeader;
+    }
 }
 
 class ArticleParser {
@@ -385,7 +389,7 @@ class LocalizedArticleFinder {
 
                     const redirectsToLinkStr = originalSource.match(/\[\[([^\[\]]*)]]/)[1];
                     const redirectsToLink = new WikiLink(redirectsToLinkStr);
-                    setCachedLinkRedirectsTo(title, redirectsToLink.link);
+                    setCachedLinkRedirectsTo(title, redirectsToLink.link + '#' + redirectsToLink.header);
 
                     return LocalizedLinkStatus.redirects();
                 }
@@ -416,7 +420,7 @@ async function findLocalizedArticles(links) {
             setCachedLinkStatus(link, freshStatus);
 
             if (freshStatus === LocalizedLinkStatus.redirects()) {
-                redirects.push(getCachedLinkRedirectsTo(link));
+                redirects.push(getCachedLinkRedirectsTo(link, true));
                 result[link] = {
                     status: freshStatus,
                     to: getCachedLinkRedirectsTo(link)
@@ -435,7 +439,7 @@ async function findLocalizedArticles(links) {
                 to: getCachedLinkRedirectsTo(link)
             };
 
-            redirects.push(getCachedLinkRedirectsTo(link));
+            redirects.push(getCachedLinkRedirectsTo(link, true));
         }
         else {
             console.debug(`findLocalizedArticles: cache HIT for link: ${link}. Status: ${cachedStatus}`);
@@ -537,13 +541,15 @@ function getCachedLinkStatus(link) {
     return status;
 }
 
-function getCachedLinkRedirectsTo(link) {
+function getCachedLinkRedirectsTo(link, withoutHeader = false) {
     const redirectsTo = localStorage.getItem(getCacheRedirectKey(link));
     if (redirectsTo == null) {
         console.warn(`getCachedLinkRedirectsTo: redirectsTo was null (link: ${link})`);
     }
 
-    return redirectsTo;
+    return withoutHeader
+        ? redirectsTo.split('#')[0]
+        : redirectsTo;
 }
 
 function setCachedLinkStatus(link, status) {
