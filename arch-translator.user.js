@@ -387,7 +387,7 @@ class LocalizedArticleFinder {
                     const redirectsToLink = new WikiLink(redirectsToLinkStr);
                     setCachedLinkRedirectsTo(title, redirectsToLink.link);
 
-                    return LocalizedLinkStatus.redirect();
+                    return LocalizedLinkStatus.redirects();
                 }
             }
 
@@ -415,7 +415,7 @@ async function findLocalizedArticles(links) {
             const freshStatus = await finder.checkIfLocalizedVersionExists(link);
             setCachedLinkStatus(link, freshStatus);
 
-            if (freshStatus === LocalizedLinkStatus.redirect()) {
+            if (freshStatus === LocalizedLinkStatus.redirects()) {
                 redirects.push(getCachedLinkRedirectsTo(link));
                 result[link] = {
                     status: freshStatus,
@@ -428,7 +428,7 @@ async function findLocalizedArticles(links) {
                 };
             }
         }
-        else if (cachedStatus === LocalizedLinkStatus.redirect()) {
+        else if (cachedStatus === LocalizedLinkStatus.redirects()) {
             console.debug(`findLocalizedArticles: cache HIT REDIRECT for link: ${link}`);
             result[link] = {
                 status: cachedStatus,
@@ -488,8 +488,8 @@ class LocalizedLinkStatus {
         return 'notExists';
     }
 
-    static redirect() {
-        return 'redirect';
+    static redirects() {
+        return 'redirects';
     }
 }
 
@@ -510,7 +510,7 @@ function validateStatus(status) {
         case LocalizedLinkStatus.unknown():
         case LocalizedLinkStatus.exists():
         case LocalizedLinkStatus.notExists():
-        case LocalizedLinkStatus.redirect():
+        case LocalizedLinkStatus.redirects():
             return true;
         default:
             return false;
