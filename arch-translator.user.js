@@ -78,16 +78,8 @@ function getISODate() {
 
 async function fetchSource(articleTitle) {
     try {
-        const response = await fetch(`/index.php?title=${articleTitle}&action=edit`);
-        const htmlText = await response.text();
-
-        const parser = new DOMParser();
-        const srcDom = parser.parseFromString(htmlText, 'text/html');
-        const srcElement = srcDom.querySelector('#wpTextbox1');
-
-        return srcElement == null
-            ? ''
-            : srcElement.textContent;
+        const response = await fetch(`/index.php?title=${articleTitle}&action=raw`);
+        return await response.text();
     } catch (e) {
         console.log("An error has occured while fetching article source:");
         console.error(e);
