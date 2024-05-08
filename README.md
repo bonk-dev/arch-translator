@@ -11,4 +11,5 @@ Change LOCALIZED_LANG_NAME to your own language before use.
 - Sorts the header elements according to the ArchWiki layout.
 
 ## Working on
-- Finding localized versions of linked articles
+- ~~Finding localized versions of linked articles~~ (done)
+- Make UI for it (the results only show up in the dev tools console)
