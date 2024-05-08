@@ -381,6 +381,12 @@ class LocalizedArticleFinder {
                     .toUpperCase();
 
                 if (sourceSlice === '#REDIRECT') {
+                    // TODO: Maybe change this function so that it returns the 'redirects to' instead of saving it
+
+                    const redirectsToLinkStr = originalSource.match(/\[\[([^\[\]]*)]]/)[1];
+                    const redirectsToLink = new WikiLink(redirectsToLinkStr);
+                    setCachedLinkRedirectsTo(title, redirectsToLink.link);
+
                     return LocalizedLinkStatus.redirect();
                 }
             }
@@ -399,6 +405,7 @@ class LocalizedArticleFinder {
 async function findLocalizedArticles(links) {
     const finder = new LocalizedArticleFinder();
     let result = {};
+    const redirects = [];
 
     for (let link of links) {
         // try cache first
@@ -406,14 +413,43 @@ async function findLocalizedArticles(links) {
         if (cachedStatus === LocalizedLinkStatus.unknown()) {
             console.debug(`findLocalizedArticles: cache NOT hit for link: ${link}. Fetching status...`);
             const freshStatus = await finder.checkIfLocalizedVersionExists(link);
-
             setCachedLinkStatus(link, freshStatus);
-            result[link] = freshStatus;
+
+            if (freshStatus === LocalizedLinkStatus.redirect()) {
+                redirects.push(getCachedLinkRedirectsTo(link));
+                result[link] = {
+                    status: freshStatus,
+                    to: getCachedLinkRedirectsTo(link)
+                };
+            }
+            else {
+                result[link] = {
+                    status: freshStatus
+                };
+            }
+        }
+        else if (cachedStatus === LocalizedLinkStatus.redirect()) {
+            console.debug(`findLocalizedArticles: cache HIT REDIRECT for link: ${link}`);
+            result[link] = {
+                status: cachedStatus,
+                to: getCachedLinkRedirectsTo(link)
+            };
+
+            redirects.push(getCachedLinkRedirectsTo(link));
         }
         else {
             console.debug(`findLocalizedArticles: cache HIT for link: ${link}. Status: ${cachedStatus}`);
-            result[link] = cachedStatus;
+            result[link] = {
+                status: cachedStatus
+            };
         }
+    }
+
+    if (redirects.length > 0) {
+        console.debug(`findLocalizedArticles: scanning ${redirects.length} redirects`);
+        const redirectsResult = await findLocalizedArticles(redirects);
+
+        return {...result, ...redirectsResult};
     }
 
     return result;
@@ -465,6 +501,10 @@ function getCacheExpirationKey(link) {
     return `${STORAGE_GUID}_CACHE_${link}_EXPIRATION`;
 }
 
+function getCacheRedirectKey(link) {
+    return `${STORAGE_GUID}_CACHE_${link}_REDIRECTS_TO`;
+}
+
 function validateStatus(status) {
     switch (status) {
         case LocalizedLinkStatus.unknown():
@@ -497,6 +537,15 @@ function getCachedLinkStatus(link) {
     return status;
 }
 
+function getCachedLinkRedirectsTo(link) {
+    const redirectsTo = localStorage.getItem(getCacheRedirectKey(link));
+    if (redirectsTo == null) {
+        console.warn(`getCachedLinkRedirectsTo: redirectsTo was null (link: ${link})`);
+    }
+
+    return redirectsTo;
+}
+
 function setCachedLinkStatus(link, status) {
     console.debug(`LinkCache: setting ${link}: ${status}`);
 
@@ -509,11 +558,22 @@ function setCachedLinkStatus(link, status) {
     localStorage.setItem(getCacheStatusKey(link), status.toString());
 }
 
+function setCachedLinkRedirectsTo(link, redirectsTo) {
+    console.debug(`LinkCache: setting 'redirectsTo' of ${link}: ${redirectsTo}`);
+
+    if (typeof redirectsTo !== 'string') {
+        throw new Error('"redirectsTo" must be a "string"');
+    }
+
+    localStorage.setItem(getCacheRedirectKey(link), redirectsTo);
+}
+
 function invalidateLinkCache(link) {
     console.debug(`LinkCache: invalidating ${link}`);
 
     localStorage.removeItem(getCacheExpirationKey(link));
     localStorage.removeItem(getCacheStatusKey(link));
+    localStorage.removeItem(getCachedLinkRedirectsTo(link));
 }
 
 // CodeMirror callback
