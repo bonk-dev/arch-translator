@@ -371,6 +371,20 @@ class LocalizedArticleFinder {
             return LocalizedLinkStatus.exists();
         }
         else if (response.status === 404) {
+            console.debug(`checkIfLocalizedVersionExists: not found, checking if redirect: ${title}`);
+            const redirectResponse = await fetch(
+                `${this._base}/index.php?title=${title.replaceAll(' ', '_')}&action=raw`);
+            if (redirectResponse.ok) {
+                const originalSource = await redirectResponse.text();
+                const sourceSlice = originalSource
+                    .substring(0, 9)
+                    .toUpperCase();
+
+                if (sourceSlice === '#REDIRECT') {
+                    return LocalizedLinkStatus.redirect();
+                }
+            }
+
             return LocalizedLinkStatus.notExists();
         }
 
@@ -437,6 +451,10 @@ class LocalizedLinkStatus {
     static notExists() {
         return 'notExists';
     }
+
+    static redirect() {
+        return 'redirect';
+    }
 }
 
 function getCacheStatusKey(link) {
@@ -452,6 +470,7 @@ function validateStatus(status) {
         case LocalizedLinkStatus.unknown():
         case LocalizedLinkStatus.exists():
         case LocalizedLinkStatus.notExists():
+        case LocalizedLinkStatus.redirect():
             return true;
         default:
             return false;
