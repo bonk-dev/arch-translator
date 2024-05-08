@@ -363,7 +363,7 @@ class LocalizedArticleFinder {
 
         const localizedTitle = title + getLangPrefix();
         const response = await fetch(
-            `${this._base}/title/${localizedTitle.replaceAll(' ', '_')}`);
+            `${this._base}/index.php?title=${localizedTitle.replaceAll(' ', '_')}&action=raw`);
         if (response.ok) {
             return LocalizedLinkStatus.exists();
         }
