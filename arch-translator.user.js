@@ -741,7 +741,7 @@ function modEditForm($editForm) {
     const localizedArticlesUiHtml =
         `<div class="localizedArticlesUi">
             <div class="localizedArticlesUi-toggler">
-                <p>AT - Localized links:</p>
+                <p>AT - Localized articles:</p>
             </div>
             <ul>
                 <li>Please wait...</li>
