@@ -156,6 +156,13 @@ class WikiLink {
     get header() {
         return this._linkedHeader;
     }
+
+    get linkWithHeader() {
+        const header = this.header != null
+            ? `#${this.header}`
+            : '';
+        return this.link + header;
+    }
 }
 
 class ArticleParser {
@@ -388,7 +395,7 @@ class LocalizedArticleFinder {
 
                     const redirectsToLinkStr = originalSource.match(/\[\[([^\[\]]*)]]/)[1];
                     const redirectsToLink = new WikiLink(redirectsToLinkStr);
-                    setCachedLinkRedirectsTo(title, redirectsToLink.link + '#' + redirectsToLink.header);
+                    setCachedLinkRedirectsTo(title, redirectsToLink.linkWithHeader);
 
                     return LocalizedLinkStatus.redirects();
                 }
