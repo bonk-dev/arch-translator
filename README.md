@@ -23,4 +23,3 @@ ones do not:
 
 ## Working on
 - Support for multiple languages (mainly the localized link caching)
-- More reliable edit mods initialization (sometimes they trigger too soon, before the MediaWiki API is available)

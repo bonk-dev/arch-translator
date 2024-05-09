@@ -7,7 +7,7 @@
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
-// @run-at      document-end
+// @run-at      document-body
 // ==/UserScript==
 
 'use strict';
@@ -865,35 +865,74 @@ function modReadPage() {
     toolsList.appendChild(translateTool);
 }
 
-// "Permanent link" tool, exists only on normal articles
-const permanentLinkTool = document.getElementById('t-permalink');
-console.debug(permanentLinkTool);
+// Executed after 'startup' module was run (MediaWiki API is ready)
+function run() {
+    // "Permanent link" tool, exists only on normal articles
+    const permanentLinkTool = document.getElementById('t-permalink');
+    console.debug(permanentLinkTool);
 
 // "Translate to LANG" feature
-if (permanentLinkTool != null) {
-    const currentTitle = getCurrentArticleTitle();
+    if (permanentLinkTool != null) {
+        const currentTitle = getCurrentArticleTitle();
 
-    if (!/_\(.*\)/g.test(currentTitle)) {
-        modReadPage();
+        if (!/_\(.*\)/g.test(currentTitle)) {
+            modReadPage();
+        } else {
+            console.debug("This looks like a translated article.");
+        }
+
     } else {
-        console.debug("This looks like a translated article.");
-    }
+        // If creating a new article, insert the template
+        const heading = document.getElementById('firstHeading');
+        const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
+        const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
+        const isTranslating = getCurrentArticleTitle().indexOf(getLangPostfix()) !== -1;
 
-} else {
-    // If creating a new article, insert the template
-    const heading = document.getElementById('firstHeading');
-    const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
-    const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
-    const isTranslating = getCurrentArticleTitle().indexOf(getLangPostfix()) !== -1;
+        console.debug(`heading: ${heading}`);
+        console.debug(`isEditing: ${isEditing}`);
+        console.debug(`isCreating: ${isCreating}`);
+        console.debug(`isTranslating: ${isTranslating}`);
 
-    console.debug(`heading: ${heading}`);
-    console.debug(`isEditing: ${isEditing}`);
-    console.debug(`isCreating: ${isCreating}`);
-    console.debug(`isTranslating: ${isTranslating}`);
-
-    if (heading != null &&
-        isEditing &&
-        isTranslating) {
-        modEditPage(isCreating);
+        if (heading != null &&
+            isEditing &&
+            isTranslating) {
+            modEditPage(isCreating);
+        }
     }
 }
+
+function waitForStartup() {
+    return new Promise((resolve, reject) => {
+        let found = false;
+        const scripts = document.querySelectorAll('script');
+
+        for (let script of scripts) {
+            if (script.src.length <= 0) continue;
+
+            console.debug('Checking url: ' + script.src);
+            const srcUrl = new URL(script.src);
+            if (srcUrl.searchParams.get('modules') === 'startup') {
+                found = true;
+                script.addEventListener('load', () => {
+                    resolve();
+                });
+
+                break;
+            }
+        }
+
+        if (!found) {
+            reject("Could not find script loading the 'startup' module");
+        }
+    });
+}
+
+waitForStartup()
+    .then(() => {
+        console.debug('Startup module loaded. Running ArchTranslator');
+        run();
+    })
+    .catch(e => {
+        console.log('Startup failed:');
+        console.error(e);
+    })
