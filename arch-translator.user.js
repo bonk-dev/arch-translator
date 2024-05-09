@@ -838,7 +838,7 @@ function modEditPage(isCreating) {
 }
 
 // run when the user opens up a normal, read article page
-function modReadPage() {
+function modReadPage(permanentLinkTool) {
     const permLinkAnchor = permanentLinkTool.querySelector('a');
     const revisionId = new URL(permLinkAnchor.href)
         .searchParams
@@ -876,7 +876,7 @@ function run() {
         const currentTitle = getCurrentArticleTitle();
 
         if (!/_\(.*\)/g.test(currentTitle)) {
-            modReadPage();
+            modReadPage(permanentLinkTool);
         } else {
             console.debug("This looks like a translated article.");
         }
