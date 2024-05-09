@@ -56,6 +56,11 @@ const LANG_LOCALIZED_NAMES = {
     "Romanian": "Română"
 }
 
+const LOCALIZED_LINKS_UI_STORE_KEY = 'mwedit-state-arch-translator-loc-links';
+let editFormModded = false;
+let editFormLocalizedLinksList = null;
+let editFormLocalizedLinksToAdd = {};
+
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
         if (window.location.pathname.startsWith("/title/")) {
@@ -363,6 +368,15 @@ function parseSource(articleText, options) {
         .then(r => {
             console.debug("findLocalizedArticles done. result:");
             console.debug(r);
+
+            if (editFormLocalizedLinksList == null) {
+                console.debug('parseSource: localized links list not yet initialized. Adding result to queue');
+                editFormLocalizedLinksToAdd = r;
+            }
+            else {
+                console.debug('parseSource: adding localized links to UI');
+                addLocalizedLinksToUi(r);
+            }
         });
 
     return parser.articleText;
@@ -584,6 +598,158 @@ function invalidateLinkCache(link) {
     localStorage.removeItem(getCachedLinkRedirectsTo(link));
 }
 
+// ======= Localized links UI =======
+
+function makeCollapsibleFooter($list, $toggler, storeKey) {
+    // we have to reimplement the collapsible list, because the original code is inside an anonymous function
+
+    const collapsedVal = '0';
+    const expandedVal = '1';
+    const isCollapsed = mw.storage.get( storeKey ) !== expandedVal;
+
+    // Style the toggler with an arrow icon and add a tabIndex and a role for accessibility
+    $toggler
+        .addClass('mw-editfooter-toggler')
+        .prop('tabIndex', 0)
+        .attr('role', 'button');
+    $list.addClass('mw-editfooter-list');
+
+    $list.makeCollapsible( {
+        $customTogglers: $toggler,
+        linksPassthru: true,
+        plainMode: true,
+        collapsed: isCollapsed
+    } );
+
+    $toggler.addClass(isCollapsed
+        ? 'mw-icon-arrow-collapsed'
+        : 'mw-icon-arrow-expanded');
+
+    $list.on('beforeExpand.mw-collapsible', () => {
+        $toggler
+            .removeClass('mw-icon-arrow-collapsed')
+            .addClass('mw-icon-arrow-expanded');
+        mw.storage.set(storeKey, expandedVal);
+    } );
+
+    $list.on('beforeCollapse.mw-collapsible', () => {
+        $toggler
+            .removeClass('mw-icon-arrow-expanded')
+            .addClass('mw-icon-arrow-collapsed');
+        mw.storage.set(storeKey, collapsedVal);
+    } );
+}
+
+function addLocalizedLinksToUi(links) {
+    // remove placeholder
+    editFormLocalizedLinksList.innerHTML = '';
+
+    const sortLinks = (a, b) => {
+        const aInfo = links[a];
+        const bInfo = links[b];
+
+        if (aInfo.status === bInfo.status) {
+            return 0;
+        }
+
+        switch (a.status) {
+            case LocalizedLinkStatus.exists():
+                return -2;
+            case LocalizedLinkStatus.redirects():
+                return -1;
+            default:
+                return 1;
+        }
+    };
+
+    for (let key of Object
+            .keys(links)
+            .sort(sortLinks)) {
+        const linkInfo = links[key];
+        let listItemElement = document.createElement('li');
+
+        // TODO: Show redirects-to link status
+        switch (linkInfo.status) {
+            case LocalizedLinkStatus.exists():
+                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.classList.add('localized-green');
+                break;
+            case LocalizedLinkStatus.redirects():
+                listItemElement.innerText = `${key} -> ${linkInfo.status} -> ${linkInfo.to}`;
+                listItemElement.classList.add('localized-blue');
+                break;
+            case LocalizedLinkStatus.notExists():
+                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.classList.add('localized-red');
+                break;
+            default:
+                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.classList.add('localized-gray');
+                break;
+        }
+
+        editFormLocalizedLinksList.appendChild(listItemElement);
+    }
+}
+
+function modEditForm($editForm) {
+    console.debug('Running modEditForm');
+
+    if (!editFormModded) {
+        editFormModded = true;
+    }
+    else {
+        return;
+    }
+
+    console.debug('modEditForm: Adding CSS for localized links UI');
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML =
+        `.localized-green {
+            color: green;
+        }
+        .localized-blue {
+            color: blue;
+        }
+        .localized-red {
+            color: red;
+        }
+        .localized-gray {
+            color: darkgray;
+        }
+        `
+    document.head.appendChild(styleElement);
+
+    const localizedLinksHtml =
+        `<div class="localizedLinksUi">
+            <div class="localizedLinksUi-toggler">
+                <p>AT - Localized links:</p>
+            </div>
+            <ul>
+                <li>Please wait...</li>
+            </ul>
+        </div>`;
+
+    $editForm
+        .find('.templatesUsed')
+        .before(localizedLinksHtml);
+
+    const linksList = $editForm.find('.localizedLinksUi ul');
+    editFormLocalizedLinksList = linksList[0];
+
+    if (editFormLocalizedLinksToAdd.length > 0) {
+        addLocalizedLinksToUi(editFormLocalizedLinksList);
+    }
+
+    makeCollapsibleFooter(
+        linksList,
+        $editForm.find('.localizedLinksUi-toggler'),
+        LOCALIZED_LINKS_UI_STORE_KEY
+    );
+
+    console.debug('modEditForm done');
+}
+
 // CodeMirror callback
 async function modCodeMirror(cmInstance, isCreating) {
     let newSourceText;
@@ -647,6 +813,13 @@ function modEditPage(isCreating) {
                 observer.disconnect();
 
                 const codeMirrorElement = mutation.addedNodes[0];
+
+                // At this point, we can be sure that other extensions are loaded as well
+                mw.hook('wikipage.editform')
+                    .add( ($editForm) => {
+                        modEditForm($editForm);
+                    });
+
                 modCodeMirror(codeMirrorElement.CodeMirror, isCreating)
                     .then(() => {
                         console.debug("modCodeMirror done");
