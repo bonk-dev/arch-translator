@@ -58,8 +58,8 @@ const LANG_LOCALIZED_NAMES = {
 
 const LOCALIZED_LINKS_UI_STORE_KEY = 'mwedit-state-arch-translator-loc-links';
 let editFormModded = false;
-let editFormLocalizedLinksList = null;
-let editFormLocalizedLinksToAdd = {};
+let editFormLocalizedArticlesList = null;
+let editFormLocalizedArticlesLinksToAdd = {};
 
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
@@ -369,13 +369,13 @@ function parseSource(articleText, options) {
             console.debug("findLocalizedArticles done. result:");
             console.debug(r);
 
-            if (editFormLocalizedLinksList == null) {
+            if (editFormLocalizedArticlesList == null) {
                 console.debug('parseSource: localized links list not yet initialized. Adding result to queue');
-                editFormLocalizedLinksToAdd = r;
+                editFormLocalizedArticlesLinksToAdd = r;
             }
             else {
                 console.debug('parseSource: adding localized links to UI');
-                addLocalizedLinksToUi(r);
+                addLinksToUi(r);
             }
         });
 
@@ -392,7 +392,7 @@ class LocalizedArticleFinder {
         const response = await fetch(
             `${this._base}/index.php?title=${localizedTitle.replaceAll(' ', '_')}&action=raw`);
         if (response.ok) {
-            return LocalizedLinkStatus.exists();
+            return LocalizedArticleStatus.exists();
         }
         else if (response.status === 404) {
             console.debug(`checkIfLocalizedVersionExists: not found, checking if redirect: ${title}`);
@@ -411,11 +411,11 @@ class LocalizedArticleFinder {
                     const redirectsToLink = new WikiLink(redirectsToLinkStr);
                     setCachedLinkRedirectsTo(title, redirectsToLink.linkWithHeader);
 
-                    return LocalizedLinkStatus.redirects();
+                    return LocalizedArticleStatus.redirects();
                 }
             }
 
-            return LocalizedLinkStatus.notExists();
+            return LocalizedArticleStatus.notExists();
         }
 
         throw new Error("Invalid response status: " + response.status);
@@ -430,12 +430,12 @@ async function findLocalizedArticles(links) {
     for (let link of links) {
         // try cache first
         const cachedStatus = getCachedLinkStatus(link);
-        if (cachedStatus === LocalizedLinkStatus.unknown()) {
+        if (cachedStatus === LocalizedArticleStatus.unknown()) {
             console.debug(`findLocalizedArticles: cache NOT hit for link: ${link}. Fetching status...`);
             const freshStatus = await finder.checkIfLocalizedVersionExists(link);
             setCachedLinkStatus(link, freshStatus);
 
-            if (freshStatus === LocalizedLinkStatus.redirects()) {
+            if (freshStatus === LocalizedArticleStatus.redirects()) {
                 redirects.push(getCachedLinkRedirectsTo(link, true));
                 result[link] = {
                     status: freshStatus,
@@ -448,7 +448,7 @@ async function findLocalizedArticles(links) {
                 };
             }
         }
-        else if (cachedStatus === LocalizedLinkStatus.redirects()) {
+        else if (cachedStatus === LocalizedArticleStatus.redirects()) {
             console.debug(`findLocalizedArticles: cache HIT REDIRECT for link: ${link}`);
             result[link] = {
                 status: cachedStatus,
@@ -495,7 +495,7 @@ function removeRevisionId(translatedTitle) {
 }
 
 // Localized links cache implementation
-class LocalizedLinkStatus {
+class LocalizedArticleStatus {
     static unknown() {
         return 'unknown';
     }
@@ -527,10 +527,10 @@ function getCacheRedirectKey(link) {
 
 function validateStatus(status) {
     switch (status) {
-        case LocalizedLinkStatus.unknown():
-        case LocalizedLinkStatus.exists():
-        case LocalizedLinkStatus.notExists():
-        case LocalizedLinkStatus.redirects():
+        case LocalizedArticleStatus.unknown():
+        case LocalizedArticleStatus.exists():
+        case LocalizedArticleStatus.notExists():
+        case LocalizedArticleStatus.redirects():
             return true;
         default:
             return false;
@@ -540,13 +540,13 @@ function validateStatus(status) {
 function getCachedLinkStatus(link) {
     const expirationDateString = localStorage.getItem(getCacheExpirationKey(link));
     if (expirationDateString == null) {
-        return LocalizedLinkStatus.unknown();
+        return LocalizedArticleStatus.unknown();
     }
 
     const expirationDate = parseInt(expirationDateString);
     if (expirationDate <= Date.now()) {
         invalidateLinkCache(link);
-        return LocalizedLinkStatus.unknown();
+        return LocalizedArticleStatus.unknown();
     }
 
     const status = localStorage.getItem(getCacheStatusKey(link));
@@ -640,9 +640,9 @@ function makeCollapsibleFooter($list, $toggler, storeKey) {
     } );
 }
 
-function addLocalizedLinksToUi(links) {
+function addLinksToUi(links) {
     // remove placeholder
-    editFormLocalizedLinksList.innerHTML = '';
+    editFormLocalizedArticlesList.innerHTML = '';
 
     const sortLinks = (a, b) => {
         const aInfo = links[a];
@@ -653,9 +653,9 @@ function addLocalizedLinksToUi(links) {
         }
 
         switch (a.status) {
-            case LocalizedLinkStatus.exists():
+            case LocalizedArticleStatus.exists():
                 return -2;
-            case LocalizedLinkStatus.redirects():
+            case LocalizedArticleStatus.redirects():
                 return -1;
             default:
                 return 1;
@@ -670,15 +670,15 @@ function addLocalizedLinksToUi(links) {
 
         // TODO: Show redirects-to link status
         switch (linkInfo.status) {
-            case LocalizedLinkStatus.exists():
+            case LocalizedArticleStatus.exists():
                 listItemElement.innerText = `${key + getLangPostfix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-green');
                 break;
-            case LocalizedLinkStatus.redirects():
+            case LocalizedArticleStatus.redirects():
                 listItemElement.innerText = `${key} -> ${linkInfo.status} -> ${linkInfo.to}`;
                 listItemElement.classList.add('localized-blue');
                 break;
-            case LocalizedLinkStatus.notExists():
+            case LocalizedArticleStatus.notExists():
                 listItemElement.innerText = `${key + getLangPostfix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-red');
                 break;
@@ -688,7 +688,7 @@ function addLocalizedLinksToUi(links) {
                 break;
         }
 
-        editFormLocalizedLinksList.appendChild(listItemElement);
+        editFormLocalizedArticlesList.appendChild(listItemElement);
     }
 }
 
@@ -720,9 +720,9 @@ function modEditForm($editForm) {
         `
     document.head.appendChild(styleElement);
 
-    const localizedLinksHtml =
-        `<div class="localizedLinksUi">
-            <div class="localizedLinksUi-toggler">
+    const localizedArticlesUiHtml =
+        `<div class="localizedArticlesUi">
+            <div class="localizedArticlesUi-toggler">
                 <p>AT - Localized links:</p>
             </div>
             <ul>
@@ -732,18 +732,18 @@ function modEditForm($editForm) {
 
     $editForm
         .find('.templatesUsed')
-        .before(localizedLinksHtml);
+        .before(localizedArticlesUiHtml);
 
-    const linksList = $editForm.find('.localizedLinksUi ul');
-    editFormLocalizedLinksList = linksList[0];
+    const linksList = $editForm.find('.localizedArticlesUi ul');
+    editFormLocalizedArticlesList = linksList[0];
 
-    if (editFormLocalizedLinksToAdd.length > 0) {
-        addLocalizedLinksToUi(editFormLocalizedLinksList);
+    if (editFormLocalizedArticlesLinksToAdd.length > 0) {
+        addLinksToUi(editFormLocalizedArticlesList);
     }
 
     makeCollapsibleFooter(
         linksList,
-        $editForm.find('.localizedLinksUi-toggler'),
+        $editForm.find('.localizedArticlesUi-toggler'),
         LOCALIZED_LINKS_UI_STORE_KEY
     );
 

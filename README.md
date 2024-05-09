@@ -11,7 +11,7 @@ Change LOCALIZED_LANG_NAME to your own language before use.
 - Sorts the header elements according to the ArchWiki layout.
 - Checks whether any of the linked English versions of articles have already been translated
 
-### Localized links scanner
+### Localized articles scanner
 The script scans the article for links to other articles and checks if these articles have
 been already translated to language of choice. It keeps the search results in local 
 cache for 6 hours by default. 
