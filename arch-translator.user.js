@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.4
+// @version     1.0.5
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -173,6 +173,13 @@ class ArticleParser {
 
         this._rawContentLines = [];
         this._links = [];
+
+        const names = Object.values(LANG_LOCALIZED_NAMES)
+            .map(n => `(?:${n})`)
+            .join('|');
+        const pattern = `\((?:${names})\)`;
+        console.debug(`ArticleParser: already_localized_regex: ${pattern}`);
+        this._validLocalizedPrefixesRegex = new RegExp(pattern);
     }
 
     get headerText() {
@@ -215,7 +222,9 @@ class ArticleParser {
     get localizableLinks() {
         return [
             ...this._links
-                .filter(l => l.linkType === 'category' || l.linkType === 'article')
+                .filter(l => !this._validLocalizedPrefixesRegex.test(l.link)
+                    && (l.linkType === 'category'
+                        || l.linkType === 'article'))
                 .map(l => l.link)
         ]
     }
@@ -355,19 +364,9 @@ function parseSource(articleText, options) {
 class LocalizedArticleFinder {
     constructor() {
         this._base = 'https://wiki.archlinux.org';
-
-        const names = Object.keys(LANG_LOCALIZED_NAMES)
-            .map(n => `(?:${n})`)
-            .join('|');
-        this._validLocalizedPrefixesRegex = new RegExp(`\((?:${names})\)`);
     }
 
     async checkIfLocalizedVersionExists(title) {
-        if (this._checkIfAlreadyLocalized(title)) {
-            console.debug(`checkIfLocalizedVersionExists: already localized: ${title}`);
-            return false;
-        }
-
         const localizedTitle = title + getLangPrefix();
         const response = await fetch(
             `${this._base}/index.php?title=${localizedTitle.replaceAll(' ', '_')}&action=raw`);
@@ -399,10 +398,6 @@ class LocalizedArticleFinder {
         }
 
         throw new Error("Invalid response status: " + response.status);
-    }
-
-    _checkIfAlreadyLocalized(title) {
-        return this._validLocalizedPrefixesRegex.test(title);
     }
 }
 
