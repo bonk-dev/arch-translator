@@ -56,6 +56,8 @@ const LANG_LOCALIZED_NAMES = {
     "Romanian": "Română"
 }
 
+let VALID_LOCALIZED_NAMES_PATTERN = '';
+
 const LOCALIZED_LINKS_UI_STORE_KEY = 'mwedit-state-arch-translator-loc-links';
 let editFormModded = false;
 let editFormLocalizedArticlesList = null;
@@ -186,12 +188,8 @@ class ArticleParser {
         this._rawContentLines = [];
         this._links = [];
 
-        const names = Object.values(LANG_LOCALIZED_NAMES)
-            .map(n => `(?:${n})`)
-            .join('|');
-        const pattern = `\((?:${names})\)`;
-        console.debug(`ArticleParser: already_localized_regex: ${pattern}`);
-        this._validLocalizedPrefixesRegex = new RegExp(pattern);
+        console.debug(`ArticleParser: already_localized_regex: ${VALID_LOCALIZED_NAMES_PATTERN}`);
+        this._validLocalizedPrefixesRegex = new RegExp(VALID_LOCALIZED_NAMES_PATTERN);
     }
 
     get headerText() {
@@ -467,9 +465,18 @@ async function findLocalizedArticles(links) {
 
     if (redirects.length > 0) {
         console.debug(`findLocalizedArticles: scanning ${redirects.length} redirects`);
-        const redirectsResult = await findLocalizedArticles(redirects);
 
-        return {...result, ...redirectsResult};
+        const langNameRegex = new RegExp(VALID_LOCALIZED_NAMES_PATTERN);
+        const redirectsResult = await findLocalizedArticles(redirects.filter(t => !langNameRegex.test(t)));
+
+        let resultWithoutLocalRedirects = {};
+        for (let key of Object.keys(redirectsResult)) {
+            if (!langNameRegex.test(key)) {
+                resultWithoutLocalRedirects[key] = redirectsResult[key];
+            }
+        }
+
+        return {...result, ...resultWithoutLocalRedirects};
     }
 
     return result;
@@ -867,6 +874,11 @@ function modReadPage(permanentLinkTool) {
 
 // Executed after 'startup' module was run (MediaWiki API is ready)
 function run() {
+    const names = Object.values(LANG_LOCALIZED_NAMES)
+        .map(n => `(?:${n})`)
+        .join('|');
+    VALID_LOCALIZED_NAMES_PATTERN = `\((?:${names})\)`;
+
     // "Permanent link" tool, exists only on normal articles
     const permanentLinkTool = document.getElementById('t-permalink');
     console.debug(permanentLinkTool);
