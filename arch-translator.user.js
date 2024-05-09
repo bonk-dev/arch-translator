@@ -666,24 +666,24 @@ function addLinksToUi(links) {
         const aInfo = links[a];
         const bInfo = links[b];
 
-        if (aInfo.status === bInfo.status) {
-            return 0;
-        }
+        const orderingTable = {
+            [LocalizedArticleStatus.exists()]: 0,
+            [LocalizedArticleStatus.redirects()]: 1,
+            [LocalizedArticleStatus.notExists()]: 2,
+            [LocalizedArticleStatus.unknown()]: 3
+        };
 
-        switch (a.status) {
-            case LocalizedArticleStatus.exists():
-                return -2;
-            case LocalizedArticleStatus.redirects():
-                return -1;
-            default:
-                return 1;
-        }
+        const aOrder = orderingTable[aInfo.status];
+        const bOrder = orderingTable[bInfo.status];
+
+        return aOrder - bOrder;
     };
 
     for (let key of Object
             .keys(links)
             .sort(sortLinks)) {
         const linkInfo = links[key];
+        console.debug(linkInfo);
         let listItemElement = document.createElement('li');
 
         // TODO: Show redirects-to link status
