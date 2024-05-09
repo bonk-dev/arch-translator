@@ -315,7 +315,7 @@ class ArticleParser {
 
         // Match: [[text - cant contain square brackets]]
         // Skips Wikipedia links
-        for (let match of line.matchAll(/\[\[(?!Wikipedia)([^\[\]]*)]]/g)) {
+        for (let match of line.matchAll(/\[\[((?!Wikipedia)(?!w))([^\[\]]*)]]/ig)) {
             // TODO: Support subpages (e.g. dm-crypt/Device encryption)
 
             const link = new WikiLink(match[1]);
