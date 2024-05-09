@@ -13,7 +13,8 @@ Change LOCALIZED_LANG_NAME to your own language before use.
 
 ### Localized links scanner
 The script scans the article for links to other articles and checks if these articles have
-been already translated to language of choice.
+been already translated to language of choice. It keeps the search results in local 
+cache for 6 hours by default. 
 
 For example, this page contains many links to English (original) articles. The script
 found out that: AUR, Network configuration etc. have Polish translations while the red
