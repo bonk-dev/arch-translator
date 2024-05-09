@@ -72,7 +72,7 @@ function getCurrentArticleTitle() {
     return mw.config.get('wgPageName');
 }
 
-function getLangPrefix() {
+function getLangPostfix() {
     return `_(${LOCALIZED_LANG_NAME})`;
 }
 
@@ -388,7 +388,7 @@ class LocalizedArticleFinder {
     }
 
     async checkIfLocalizedVersionExists(title) {
-        const localizedTitle = title + getLangPrefix();
+        const localizedTitle = title + getLangPostfix();
         const response = await fetch(
             `${this._base}/index.php?title=${localizedTitle.replaceAll(' ', '_')}&action=raw`);
         if (response.ok) {
@@ -671,7 +671,7 @@ function addLocalizedLinksToUi(links) {
         // TODO: Show redirects-to link status
         switch (linkInfo.status) {
             case LocalizedLinkStatus.exists():
-                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPostfix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-green');
                 break;
             case LocalizedLinkStatus.redirects():
@@ -679,11 +679,11 @@ function addLocalizedLinksToUi(links) {
                 listItemElement.classList.add('localized-blue');
                 break;
             case LocalizedLinkStatus.notExists():
-                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPostfix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-red');
                 break;
             default:
-                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPostfix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-gray');
                 break;
         }
@@ -755,7 +755,7 @@ async function modCodeMirror(cmInstance, isCreating) {
     let newSourceText;
     if (isCreating) {
         const title = getCurrentArticleTitle();
-        const langPostfix = getLangPrefix();
+        const langPostfix = getLangPostfix();
         const originalTitle = title
             .replace(langPostfix, '')
             .replace('_', ' ');
@@ -845,7 +845,7 @@ function modReadPage() {
         .get('oldid');
 
     // get translated article title
-    const translatedArticleTitle = `${getCurrentArticleTitle()}${getLangPrefix()}`;
+    const translatedArticleTitle = `${getCurrentArticleTitle()}${getLangPostfix()}`;
     const translatedArticleHref = encodeURI(`${window.location.origin}/index.php?title=${translatedArticleTitle}&action=edit`);
 
     // save revision id for TranslationStatus
@@ -884,7 +884,7 @@ if (permanentLinkTool != null) {
     const heading = document.getElementById('firstHeading');
     const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
     const isCreating = isEditing && heading.textContent.indexOf('Creating') !== -1;
-    const isTranslating = getCurrentArticleTitle().indexOf(getLangPrefix()) !== -1;
+    const isTranslating = getCurrentArticleTitle().indexOf(getLangPostfix()) !== -1;
 
     console.debug(`heading: ${heading}`);
     console.debug(`isEditing: ${isEditing}`);
