@@ -116,6 +116,9 @@ class LineParseResult {
     static get endOfHeader() {
         return "endOfHeader";
     }
+    static get emptyLine() {
+        return 'emptyLine';
+    }
 }
 
 class WikiLink {
@@ -240,6 +243,14 @@ class ArticleParser {
     }
 
     _parseHeaderLine(line) {
+        function isBlank(str) {
+            return (!str || /^\s*$/.test(str));
+        }
+
+        if (isBlank(line)) {
+            return LineParseResult.emptyLine;
+        }
+
         if (line.startsWith("#REDIRECT")) {
             this._redirects.push(line);
             this._log("Found redirect: " + line);
@@ -267,7 +278,7 @@ class ArticleParser {
 
             return LineParseResult.relatedArticle;
         }
-        else if (line.startsWith("{{")) {
+        else if (line.startsWith("{{") || line.startsWith("__")) {
             if (this._parseMagicWords) {
                 this._addMagicWord(line);
                 return LineParseResult.magicWord;
