@@ -671,7 +671,7 @@ function addLocalizedLinksToUi(links) {
         // TODO: Show redirects-to link status
         switch (linkInfo.status) {
             case LocalizedLinkStatus.exists():
-                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-green');
                 break;
             case LocalizedLinkStatus.redirects():
@@ -679,11 +679,11 @@ function addLocalizedLinksToUi(links) {
                 listItemElement.classList.add('localized-blue');
                 break;
             case LocalizedLinkStatus.notExists():
-                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-red');
                 break;
             default:
-                listItemElement.innerText = `${key} -> ${linkInfo.status}`;
+                listItemElement.innerText = `${key + getLangPrefix()} -> ${linkInfo.status}`;
                 listItemElement.classList.add('localized-gray');
                 break;
         }
