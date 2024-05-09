@@ -9,7 +9,7 @@ Change LOCALIZED_LANG_NAME to your own language before use.
 - Inserts the [localized] ic|TranslationStatus template;
 - Inserts the English interlanguage link;
 - Sorts the header elements according to the ArchWiki layout.
+- Checks whether any of the linked English versions of articles have already been translated
 
 ## Working on
-- ~~Finding localized versions of linked articles~~ (done)
-- Make UI for it (the results only show up in the dev tools console)
+- Support for multiple languages (mainly the localized link caching)
