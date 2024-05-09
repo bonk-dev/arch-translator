@@ -17,9 +17,8 @@ been already translated to language of choice. It keeps the search results in lo
 cache for 6 hours by default. 
 
 For example, this page contains many links to English (original) articles. The script
-found out that: AUR, Network configuration etc. have Polish translations while the red
-ones do not:
-![Localized links UI](assets/localized-links.png)
+found out that AUR has Polish translation while the red links do not:
+![Localized articles UI](assets/localized-links.png)
 
 ## Working on
 - Support for multiple languages (mainly the localized link caching)
