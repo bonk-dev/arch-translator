@@ -874,15 +874,18 @@ function modReadPage(permanentLinkTool) {
         .get('oldid');
 
     // get translated article title
-    const translatedArticleTitle = `${getCurrentArticleTitle()}${getLangPostfix()}`;
-    const translatedArticleHref = encodeURI(`${window.location.origin}/index.php?title=${translatedArticleTitle}&action=edit`);
+    const currentTitle = getCurrentArticleTitle();
+    const subpageSplit = currentTitle.split('/');
+    const translatedTitle = subpageSplit.length > 1
+        ? subpageSplit.join(getLangPostfix() + '/') + getLangPostfix()
+        : currentTitle + getLangPostfix();
 
     // save revision id for TranslationStatus
-    saveRevisionId(translatedArticleTitle, revisionId);
+    saveRevisionId(translatedTitle, revisionId);
 
     // create Translate button
     const createTranslationTool = document.createElement('a');
-    createTranslationTool.href = translatedArticleHref;
+    createTranslationTool.href = encodeURI(`${window.location.origin}/index.php?title=${translatedTitle}&action=edit`);
     createTranslationTool.innerHTML = `Translate to ${LOCALIZED_LANG_NAME}`;
 
     addCustomTool(createTranslationTool, 'create-translation');
