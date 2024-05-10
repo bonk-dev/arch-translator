@@ -63,6 +63,8 @@ let editFormModded = false;
 let editFormLocalizedArticlesList = null;
 let editFormLocalizedArticlesLinksToAdd = {};
 
+let toolsMenu = null;
+
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
         if (window.location.pathname.startsWith("/title/")) {
@@ -879,17 +881,49 @@ function modReadPage(permanentLinkTool) {
     saveRevisionId(translatedArticleTitle, revisionId);
 
     // create Translate button
-    const translateTool = document.createElement('li');
-    translateTool.id = 't-translate-article';
-    translateTool.className = 'mw-list-item';
-    translateTool.innerHTML = `
-      <a href='${translatedArticleHref}'>
-        <span>Translate to ${LOCALIZED_LANG_NAME}</span>
-      </a>`;
+    const createTranslationTool = document.createElement('a');
+    createTranslationTool.href = translatedArticleHref;
+    createTranslationTool.innerHTML = `Translate to ${LOCALIZED_LANG_NAME}`;
 
-    // add the button
-    const toolsList = permanentLinkTool.parentElement;
-    toolsList.appendChild(translateTool);
+    addCustomTool(createTranslationTool, 'create-translation');
+}
+
+function createToolSection() {
+    const toolContainer = document.createElement('div');
+    toolContainer.id = 'p-arch-translator';
+    toolContainer.classList.add('vector-menu', 'mw-portlet');
+
+    // Heading
+    const menuHeading = document.createElement('div');
+    menuHeading.classList.add('vector-menu-heading');
+    menuHeading.innerText = 'Arch Translator';
+    toolContainer.appendChild(menuHeading);
+
+    // Content
+    const menuContent = document.createElement('div');
+    menuContent.classList.add('vector-menu-content');
+    toolContainer.appendChild(menuContent);
+
+    const menuList = document.createElement('ul');
+    menuList.classList.add('vector-menu-content-list');
+    menuContent.appendChild(menuList);
+
+    return [toolContainer, menuList];
+}
+
+function addCustomTool(toolElement, name) {
+    if (typeof name !== 'string') {
+        throw new Error("'name' must be a string");
+    }
+    if (toolsMenu == null) {
+        throw new Error('The tools menu was not created yet');
+    }
+
+    const listItem = document.createElement('li');
+    listItem.id = `t-at-${name}`;
+    listItem.classList.add('mw-list-item');
+    listItem.appendChild(toolElement);
+    toolsMenu.appendChild(listItem);
 }
 
 function handleRecreateToolClick(e) {
@@ -901,27 +935,12 @@ function handleRecreateToolClick(e) {
 
 // Adds tools useful when the user is editing a page
 function addEditArticleTools() {
-    console.debug('Running addEditArticleTools');
+    const forceRecreateTool = document.createElement('a');
+    forceRecreateTool.href = '#';
+    forceRecreateTool.innerHTML = '<span>Paste original English source</span>';
+    forceRecreateTool.addEventListener('click', handleRecreateToolClick);
 
-    const toolsContainerElement = document.querySelector('#p-tb .vector-menu-content-list');
-    if (toolsContainerElement.dataset.atModded != null) {
-        // already modded
-        return;
-    }
-
-    toolsContainerElement.dataset.atModded = 'true';
-
-    const forceRecreateToolHtml =
-        `<a href="#">
-            <span>Paste original English source</span>
-         </a>`;
-    const toolElement = document.createElement('li');
-    toolElement.id = 't-at-recreate';
-    toolElement.className = 'mw-list-item';
-    toolElement.innerHTML = forceRecreateToolHtml;
-    toolElement.querySelector('a')
-               .addEventListener('click', handleRecreateToolClick);
-    toolsContainerElement.appendChild(toolElement);
+    addCustomTool(forceRecreateTool, 'recreate');
 }
 
 // Executed after 'startup' module was run (MediaWiki API is ready)
@@ -931,11 +950,17 @@ function run() {
         .join('|');
     VALID_LOCALIZED_NAMES_PATTERN = `\((?:${names})\)`;
 
+    console.debug('run(): creating the custom tool section');
+    const [toolSection, toolList] = createToolSection();
+    toolsMenu = toolList;
+    const toolSectionContainer = document.getElementById('vector-page-tools');
+    toolSectionContainer.appendChild(toolSection);
+    console.debug('run(): tool section created');
+
     // "Permanent link" tool, exists only on normal articles
     const permanentLinkTool = document.getElementById('t-permalink');
-    console.debug(permanentLinkTool);
 
-// "Translate to LANG" feature
+    // "Translate to LANG" feature
     if (permanentLinkTool != null) {
         const currentTitle = getCurrentArticleTitle();
 
