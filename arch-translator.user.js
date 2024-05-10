@@ -776,7 +776,7 @@ async function modCodeMirror(cmInstance, isCreating) {
         const langPostfix = getLangPostfix();
         const originalTitle = title
             .replace(langPostfix, '')
-            .replace('_', ' ');
+            .replaceAll('_', ' ');
         const revisionId = getRevisionId(title);
 
         const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
