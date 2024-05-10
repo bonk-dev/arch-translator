@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.5
+// @version     1.0.6
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -808,6 +808,26 @@ async function modCodeMirror(cmInstance, isCreating) {
 
 // run when the user opens up an edit article page
 function modEditPage(isCreating) {
+    const handleCodeMirror = (codeMirror) => {
+        // At this point, we can be sure that other extensions are loaded as well
+        mw.hook('wikipage.editform')
+            .add( ($editForm) => {
+                modEditForm($editForm);
+            });
+
+        modCodeMirror(codeMirror, isCreating)
+            .then(() => {
+                console.debug("modCodeMirror done");
+            });
+    };
+
+    const panel1CodeMirrorSelector = '.ext-WikiEditor-twopanes-pane1 .CodeMirror';
+    const existingCodeMirror = document.querySelector(panel1CodeMirrorSelector);
+    if (existingCodeMirror != null && typeof existingCodeMirror.CodeMirror !== 'undefined') {
+        handleCodeMirror(existingCodeMirror.CodeMirror);
+        return;
+    }
+
     // Wait for CodeMirror init
     // Select the node that will be observed for mutations
     const targetNode = document.getElementById("editform");
@@ -831,17 +851,7 @@ function modEditPage(isCreating) {
                 observer.disconnect();
 
                 const codeMirrorElement = mutation.addedNodes[0];
-
-                // At this point, we can be sure that other extensions are loaded as well
-                mw.hook('wikipage.editform')
-                    .add( ($editForm) => {
-                        modEditForm($editForm);
-                    });
-
-                modCodeMirror(codeMirrorElement.CodeMirror, isCreating)
-                    .then(() => {
-                        console.debug("modCodeMirror done");
-                    });
+                handleCodeMirror(codeMirrorElement.CodeMirror);
 
                 break;
             }
@@ -883,6 +893,38 @@ function modReadPage(permanentLinkTool) {
     toolsList.appendChild(translateTool);
 }
 
+function handleRecreateToolClick(e) {
+    console.debug('Running handleRecreateToolClick');
+    e.preventDefault();
+
+    modEditPage(true);
+}
+
+// Adds tools useful when the user is editing a page
+function addEditArticleTools() {
+    console.debug('Running addEditArticleTools');
+
+    const toolsContainerElement = document.querySelector('#p-tb .vector-menu-content-list');
+    if (toolsContainerElement.dataset.atModded != null) {
+        // already modded
+        return;
+    }
+
+    toolsContainerElement.dataset.atModded = 'true';
+
+    const forceRecreateToolHtml =
+        `<a href="#">
+            <span>Paste original English source</span>
+         </a>`;
+    const toolElement = document.createElement('li');
+    toolElement.id = 't-at-recreate';
+    toolElement.className = 'mw-list-item';
+    toolElement.innerHTML = forceRecreateToolHtml;
+    toolElement.querySelector('a')
+               .addEventListener('click', handleRecreateToolClick);
+    toolsContainerElement.appendChild(toolElement);
+}
+
 // Executed after 'startup' module was run (MediaWiki API is ready)
 function run() {
     const names = Object.values(LANG_LOCALIZED_NAMES)
@@ -905,6 +947,8 @@ function run() {
         }
 
     } else {
+        addEditArticleTools();
+
         // If creating a new article, insert the template
         const heading = document.getElementById('firstHeading');
         const isEditing = (typeof mw !== 'undefined') && mw.config.get('wgAction') === 'edit';
