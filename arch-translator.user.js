@@ -683,7 +683,6 @@ function addLinksToUi(links) {
             .keys(links)
             .sort(sortLinks)) {
         const linkInfo = links[key];
-        console.debug(linkInfo);
         let listItemElement = document.createElement('li');
 
         // TODO: Show redirects-to link status
