@@ -399,16 +399,16 @@ class LocalizedArticleFinder {
     }
 
     async checkIfLocalizedVersionExists(title) {
-        const localizedTitle = title + getLangPostfix();
+        const localizedTitle = encodeURIComponent(title.replaceAll(' ', '_') + getLangPostfix());
         const response = await fetch(
-            `${this._base}/index.php?title=${localizedTitle.replaceAll(' ', '_')}&action=raw`);
+            `${this._base}/index.php?title=${localizedTitle}&action=raw`);
         if (response.ok) {
             return LocalizedArticleStatus.exists();
         }
         else if (response.status === 404) {
             console.debug(`checkIfLocalizedVersionExists: not found, checking if redirect: ${title}`);
             const redirectResponse = await fetch(
-                `${this._base}/index.php?title=${title.replaceAll(' ', '_')}&action=raw`);
+                `${this._base}/index.php?title=${encodeURIComponent(title.replaceAll(' ', '_'))}&action=raw`);
             if (redirectResponse.ok) {
                 const originalSource = await redirectResponse.text();
                 const sourceSlice = originalSource
