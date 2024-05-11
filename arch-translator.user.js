@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.6
+// @version     1.0.7
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -571,7 +571,7 @@ function getCachedLinkStatus(link) {
 
     const status = localStorage.getItem(getCacheStatusKey(link));
     if (!validateStatus(status)) {
-        throw new Error(`Invalid cache status: ${status}`);
+        throw new Error(`Invalid cache status: ${status} (link: ${link})`);
     }
 
     return status;
