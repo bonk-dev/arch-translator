@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.7
+// @version     1.0.8
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -326,7 +326,7 @@ class ArticleParser {
 
         // Match: [[text - cant contain square brackets]]
         // Skips Wikipedia links
-        for (let match of line.matchAll(/\[\[(?!Wikipedia)(?!w)([^\[\]]*)]]/ig)) {
+        for (let match of line.matchAll(/\[\[(?!Wikipedia)(?!w)(?!mw)([^\[\]]*)]]/ig)) {
             // TODO: Support subpages (e.g. dm-crypt/Device encryption)
 
             const link = new WikiLink(match[1]);
