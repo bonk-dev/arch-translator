@@ -98,6 +98,25 @@ async function fetchSource(articleTitle) {
     }
 }
 
+function getArticleInfo() {
+    const title = getCurrentArticleTitle();
+    const langPostfix = getLangPostfix();
+    const originalTitle = title
+        .replaceAll(langPostfix, '')
+        .replaceAll('_', ' ');
+
+    return title === originalTitle ? {
+        title,
+        revisionId: currentPageRevisionId,
+        isTranslated: false
+    } : {
+        title,
+        originalTitle,
+        revisionId: getRevisionId(title),
+        isTranslated: true
+    };
+}
+
 class LineParseResult {
     static get redirect() {
         return "redirect";
@@ -775,28 +794,23 @@ function modEditForm($editForm) {
 async function modCodeMirror(cmInstance, isCreating) {
     let newSourceText;
     if (isCreating) {
-        const title = getCurrentArticleTitle();
-        const langPostfix = getLangPostfix();
-        const originalTitle = title
-            .replaceAll(langPostfix, '')
-            .replaceAll('_', ' ');
-        const revisionId = getRevisionId(title);
+        const articleInfo = getArticleInfo();
 
         const templateName = USE_LOCALIZED_TRANSLATION_STATUS_TEMPLATE
             ? `TranslationStatus (${LOCALIZED_LANG_NAME})`
             : 'TranslationStatus';
-        const status = `{{${templateName}|${originalTitle}|${getISODate()}|${revisionId}}}`;
+        const status = `{{${templateName}|${articleInfo.originalTitle}|${getISODate()}|${articleInfo.revisionId}}}`;
         console.debug(`Status template: ${status}`);
 
         console.debug("Fetching original source");
-        const originalSrc = await fetchSource(originalTitle);
+        const originalSrc = await fetchSource(articleInfo.originalTitle);
 
         // Yes, we could just insert the TranslationStatus template at the beginning,
         // but it would be against the wiki style
 
         newSourceText = parseSource(originalSrc, {
             statusTemplate: status,
-            interlanguageLink: `[[en:${originalTitle}]]`,
+            interlanguageLink: `[[en:${articleInfo.originalTitle}]]`,
             isCreating: true
         });
     }
@@ -952,6 +966,18 @@ async function handleCopyRevisionIdClick(e) {
     await window.navigator.clipboard.writeText(currentPageRevisionId.toString());
 }
 
+async function handleCopyOriginalRevisionIdClick(e) {
+    console.debug('Running handleCopyOriginalRevisionIdClick');
+    e.preventDefault();
+
+    const info = getArticleInfo();
+    if (!info.isTranslated) {
+        throw new Error('Article is not translated');
+    }
+
+    await window.navigator.clipboard.writeText(info.revisionId.toString());
+}
+
 function handleRecreateToolClick(e) {
     console.debug('Running handleRecreateToolClick');
     e.preventDefault();
@@ -967,6 +993,13 @@ function addEditArticleTools() {
     forceRecreateTool.addEventListener('click', handleRecreateToolClick);
 
     addCustomTool(forceRecreateTool, 'recreate');
+
+    const copyOriginalRevisionIdTool = document.createElement('a');
+    copyOriginalRevisionIdTool.href = '#';
+    copyOriginalRevisionIdTool.innerHTML = '<span>Copy latest English revision id</span>';
+    copyOriginalRevisionIdTool.addEventListener('click', handleCopyOriginalRevisionIdClick);
+
+    addCustomTool(copyOriginalRevisionIdTool, 'copy-original-revision-id');
 }
 
 // Executed after 'startup' module was run (MediaWiki API is ready)
