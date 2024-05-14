@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     1.0.8
+// @version     1.0.9
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
@@ -64,6 +64,8 @@ let editFormLocalizedArticlesList = null;
 let editFormLocalizedArticlesLinksToAdd = {};
 
 let toolsMenu = null;
+
+let currentPageRevisionId = null;
 
 function getCurrentArticleTitle() {
     if (typeof mw === 'undefined') {
@@ -873,6 +875,8 @@ function modReadPage(permanentLinkTool) {
         .searchParams
         .get('oldid');
 
+    currentPageRevisionId = revisionId;
+
     // get translated article title
     const currentTitle = getCurrentArticleTitle();
     const subpageSplit = currentTitle.split('/');
@@ -889,6 +893,14 @@ function modReadPage(permanentLinkTool) {
     createTranslationTool.innerHTML = `Translate to ${LOCALIZED_LANG_NAME}`;
 
     addCustomTool(createTranslationTool, 'create-translation');
+
+    // Copy revision id button
+    const copyRevisionIdButton = document.createElement('a');
+    copyRevisionIdButton.href = '#';
+    copyRevisionIdButton.innerHTML = 'Copy revision id';
+    copyRevisionIdButton.addEventListener('click', handleCopyRevisionIdClick);
+
+    addCustomTool(copyRevisionIdButton, 'copy-revision-id');
 }
 
 function createToolSection() {
@@ -927,6 +939,17 @@ function addCustomTool(toolElement, name) {
     listItem.classList.add('mw-list-item');
     listItem.appendChild(toolElement);
     toolsMenu.appendChild(listItem);
+}
+
+async function handleCopyRevisionIdClick(e) {
+    console.debug('Running handleCopyRevisionIdClick');
+    e.preventDefault();
+
+    if (currentPageRevisionId == null) {
+        throw new Error('currentPageRevisionId was null');
+    }
+
+    await window.navigator.clipboard.writeText(currentPageRevisionId.toString());
 }
 
 function handleRecreateToolClick(e) {
