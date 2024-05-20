@@ -60,6 +60,7 @@ interface MediaWikiConfigValues {
     wgNamespaceNumber: number
     wgPageContentLanguage: string
     wgPageContentModel: string
+    // The page name - basically wgTitle with whitespace replaced by '_'
     wgPageName: string
     wgPageViewLanguage: string
     wgRelevantArticleId: number
@@ -76,6 +77,7 @@ interface MediaWikiConfigValues {
     wgServer: string
     wgServerName: string
     wgSiteName: string
+    // The article title - basically wgPageName without the '_'
     wgTitle: string
     wgTranslateNumerals: boolean
     wgUrlProtocols: string
