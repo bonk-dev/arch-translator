@@ -105,7 +105,7 @@ interface MediaWikiConfig {
     values: MediaWikiConfigValues
 }
 
-// There is a lot more than just config, but I do not need anything. At least for now.
+// There is a lot more than just config, but I do not need anything else - for now at least.
 interface MediaWikiApi {
     config: MediaWikiConfig
 }
