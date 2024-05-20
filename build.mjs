@@ -5,7 +5,7 @@ import * as chokidar from 'chokidar';
 const tmpPath = 'build/arch-translator.js';
 const outPath = 'build/arch-translator.user.js';
 const ctx = await esbuild.context({
-    entryPoints: ['src/index.js'],
+    entryPoints: ['src/index.ts'],
     bundle: true,
     outfile: tmpPath
 });
