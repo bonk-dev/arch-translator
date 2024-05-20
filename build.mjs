@@ -25,10 +25,31 @@ async function build() {
     fs.closeSync(bundleHandle);
 }
 
-const watcher = chokidar.watch('src').on('all', (event, path) => {
-    console.log(event, path);
-    build()
-        .then(() => {
-            console.log('build done');
+if (process.argv.length < 3) {
+    console.error("Usage: node build.mjs <build|watch>");
+    process.exit(1);
+}
+
+const verb = process.argv[2].toLowerCase();
+switch (verb) {
+    case 'build':
+        build()
+            .then(() => {
+                ctx.dispose()
+                    .then(() => {
+                        console.log(`Build done. See ${outPath}`);
+                    });
+            });
+        break;
+    case 'watch':
+        chokidar.watch('src').on('all', (event, path) => {
+            console.log(event, path);
+            build()
+                .then(() => {
+                    console.log('build done');
+                });
         });
-});
+        break;
+    default:
+        throw new Error('Invalid verb: ' + verb);
+}

@@ -4,7 +4,8 @@
   "description": "Tools for making translating articles easier. Works on the new Vector theme",
   "main": "index.js",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs build",
+    "watch": "node build.mjs watch"
   },
   "repository": {
     "type": "git",
