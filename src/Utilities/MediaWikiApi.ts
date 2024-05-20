@@ -103,7 +103,12 @@ interface MediaWikiApi {
     config: MediaWikiConfig
 }
 
-export function getMwApi(): MediaWikiApi {
+export function getMwApi(throwOnUndefined: boolean = true): MediaWikiApi {
+    // @ts-ignore
+    if (throwOnUndefined && typeof mw === 'undefined') {
+        throw new Error('MediaWiki API was requested but it is not ready yet');
+    }
+
     // @ts-ignore
     return mw;
 }
