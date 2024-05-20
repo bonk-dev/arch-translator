@@ -32,6 +32,8 @@ export class StartupLoadAgent {
                         scriptElement.addEventListener('error', (e) => {
                             reject(e);
                         });
+
+                        this._observer?.disconnect();
                     }
                 }
             });
