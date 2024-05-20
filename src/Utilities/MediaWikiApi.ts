@@ -18,6 +18,11 @@ interface VisualEditorConfig {
     // implement if you need it
 }
 
+export enum EditMessage {
+    Editing = 'editing',
+    Creating = 'creating'
+}
+
 interface MediaWikiConfigValues {
     debug: number
     extCodeMirrorConfig: any
@@ -45,7 +50,7 @@ interface MediaWikiConfigValues {
     wgDefaultDateFormat: string
     wgDigitTransformTable: Array<string>
     wgEchoSeenTime: EchoSeenTime
-    wgEditMessage: string
+    wgEditMessage: EditMessage
     wgEditSubmitButtonLabelPublish: boolean
     wgExtensionAssetsPath: string
     wgExtraSignatureNamespaces: Array<any>
