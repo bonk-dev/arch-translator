@@ -7,5 +7,5 @@
 // @author      bonk-dev
 // @description Tools for making translating articles easier. Works on the new Vector theme
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
-// @run-at      document-body
+// @run-at      document-start
 // ==/UserScript==

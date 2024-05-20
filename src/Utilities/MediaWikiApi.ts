@@ -105,17 +105,29 @@ interface MediaWikiConfig {
     values: MediaWikiConfigValues
 }
 
-// There is a lot more than just config, but I do not need anything else - for now at least.
-interface MediaWikiApi {
-    config: MediaWikiConfig
+interface MediaWikiHookContext {
+    add(callback: Function): any
+    fire(): any
+    remove(): any
 }
 
-export function getMwApi(throwOnUndefined: boolean = true): MediaWikiApi {
-    // @ts-ignore
-    if (throwOnUndefined && typeof mw === 'undefined') {
-        throw new Error('MediaWiki API was requested but it is not ready yet');
-    }
+interface MediaWikiLoader {
+    using(module: string): Promise<void>
+}
 
+// There is a lot more than just config and hook(...), but I do not need anything else - for now at least.
+interface MediaWikiApi {
+    config: MediaWikiConfig
+    hook(name: string): MediaWikiHookContext
+    loader: MediaWikiLoader
+}
+
+export function isMwApiReady() {
+    // @ts-ignore
+    return typeof mw !== 'undefined';
+}
+
+export function getMwApi(): MediaWikiApi {
     // @ts-ignore
     return mw;
 }
