@@ -4,7 +4,7 @@
   "description": "Tools for making translating articles easier. Works on the new Vector theme",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild src/index.js --bundle --outfile=build/arch-translator.user.js"
+    "build": "node build.mjs"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/bonk-dev/arch-translator#readme",
   "devDependencies": {
+    "chokidar": "^3.6.0",
     "esbuild": "0.21.3"
   }
 }
