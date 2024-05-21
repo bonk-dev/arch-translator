@@ -44,6 +44,10 @@ interface MediaWikiConfigValues {
     wgCommentCodePointLimit: number
     wgContentLanguage: string
     wgContentNamespaces: Array<number>
+
+    /**
+     * The latest revision ID
+     */
     wgCurRevisionId: number
     // noinspection SpellCheckingInspection
     wgDBname: string
@@ -74,6 +78,10 @@ interface MediaWikiConfigValues {
     wgRequestId: string
     wgRestrictionEdit: Array<string>
     wgRestrictionMove: Array<string>
+
+    /**
+     * The current page revision ID (if you are viewing an older revision this field will have the old ID)
+     */
     wgRevisionId: number
     wgScript: string
     wgScriptPath: string

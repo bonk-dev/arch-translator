@@ -29,7 +29,9 @@ enum PageType {
 }
 
 type PageInfo = {
+    isRedirect: boolean
     isTranslated: boolean
+    latestRevisionId: number
     pageName: string
     pageType: PageType
     title: string
@@ -81,9 +83,19 @@ export function getCurrentPageInfo(): PageInfo {
         .config
         .values
         .wgPageName;
+    const isRedirect = getMwApi()
+        .config
+        .values
+        .wgIsRedirect;
+    const revisionId = getMwApi()
+        .config
+        .values
+        .wgCurRevisionId;
 
     return {
+        isRedirect: isRedirect,
         isTranslated: isTranslated(title),
+        latestRevisionId: revisionId,
         pageName: pageName,
         pageType: getCurrentPageType(),
         title: title
