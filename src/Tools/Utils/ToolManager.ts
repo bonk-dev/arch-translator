@@ -29,10 +29,24 @@ type SimpleSidebarTool = {
     handler: (this:HTMLAnchorElement, ev: MouseEvent) => any
 };
 
+const toolInProgressClass = 'at-tool-inProgress';
 export function sideTool(toolInfo: SimpleSidebarTool): CustomSidebarTool {
     const element = document.createElement('a');
     element.innerHTML = toolInfo.displayText;
-    element.addEventListener('click', toolInfo.handler);
+    element.addEventListener('click', e => {
+        if (element.parentElement!.classList.contains(toolInProgressClass)) {
+            return;
+        }
+
+        // @ts-ignore
+        const result = toolInfo.handler(e);
+        if (result instanceof Promise) {
+            element.parentElement!.classList.add(toolInProgressClass);
+            result.finally(() => {
+                element.parentElement!.classList.remove(toolInProgressClass);
+            });
+        }
+    });
 
     return {
         name: toolInfo.name,
