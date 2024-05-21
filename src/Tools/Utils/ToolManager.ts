@@ -44,7 +44,7 @@ export class ToolManager {
      * Adds the ArchTranslator tool section to the DOM
      * @param parent If not null, adds the tool section to the specified element (otherwise looks for #vector-page-tools)
      */
-    public addSidebarToPage(parent: HTMLElement|null) {
+    public addSidebarToPage(parent: HTMLElement|null = null) {
         if (this._sidebarToolSectionAddedToDom) {
             throw new Error("The tool section was added to DOM already");
         }
