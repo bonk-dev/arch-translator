@@ -7,7 +7,8 @@ const outPath = 'build/arch-translator.user.js';
 const ctx = await esbuild.context({
     entryPoints: ['src/index.ts'],
     bundle: true,
-    outfile: tmpPath
+    outfile: tmpPath,
+    sourcemap: 'inline' // TODO: Offset sourcemap lines by amount of lines in uscript-header.txt
 });
 
 async function build() {
