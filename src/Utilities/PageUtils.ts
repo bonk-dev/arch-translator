@@ -1,5 +1,12 @@
 import {EditMessage, getMwApi} from "./MediaWikiApi";
-import {isTranslated} from "../Internalization/I18nConstants";
+import {isTranslated, LanguagesInfo, removeLanguagePostfix} from "../Internalization/I18nConstants";
+import {getPageContent} from "./MediaWikiClient";
+import {getCachedPageInfo} from "../Storage/ScriptDb";
+
+/**
+ * Sometimes we do not need to fetch(...) for the raw page content (e.g. on edit pages).
+ */
+let cachedPageContent: string|null = null;
 
 enum PageType {
     /**
@@ -100,4 +107,57 @@ export function getCurrentPageInfo(): PageInfo {
         pageType: getCurrentPageType(),
         title: title
     };
+}
+
+/**
+ * Stores the current page content in memory (and not in the ScriptDb).
+ */
+export function cacheCurrentPageContent(content: string) {
+    cachedPageContent = content;
+}
+
+export async function getCurrentPageContent() {
+    if (cachedPageContent != null) {
+        console.debug(`getCurrentPageContent: cache hit`);
+        return cachedPageContent;
+    }
+
+    const pageName = getMwApi()
+        .config
+        .values
+        .wgPageName;
+
+    const type = getCurrentPageType();
+    switch (type) {
+        case PageType.Editor:
+        case PageType.CreateEditor:
+        case PageType.ViewOnlyEditor:
+            // TODO: Maybe do not rely on CodeMirror hook? Probably won't do much, the content is expected to be ready on doc load
+            console.warn("cachedPageContent was null on edit page. You might be requesting the page content too soon.");
+            return await getPageContent(pageName);
+        case PageType.Read:
+            return await getPageContent(pageName);
+        case PageType.Other:
+            throw new Error("Cannot return content for page of 'Other' type");
+    }
+}
+
+/**
+ * Fetches the latest revision ID of the translation of the current page
+ */
+export async function getTranslationRevisionId(): Promise<number> {
+    const info = getCurrentPageInfo();
+    if (!info.isTranslated) {
+        throw new Error("The current page is not a translation");
+    }
+
+    const englishPageName = removeLanguagePostfix(info.pageName);
+    const cachedInfo = await getCachedPageInfo(englishPageName);
+    if (cachedInfo != null) {
+        console.debug('getTranslationRevisionId: cache hit');
+        return cachedInfo.latestRevisionId;
+    }
+
+    // TODO
+    throw new Error("Not implemented yet");
 }

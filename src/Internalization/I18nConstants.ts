@@ -66,3 +66,16 @@ export function isTranslated(title: string): boolean {
 
     return false;
 }
+
+export function removeLanguagePostfix(pageOrTitle: string) {
+    for (const postfix of validLangPostfixes) {
+        if (pageOrTitle.endsWith(`(${postfix})`)) {
+            return pageOrTitle.substring(0, pageOrTitle.length - 1 - (postfix.length + 2));
+        }
+    }
+
+    return pageOrTitle;
+}
+
+// @ts-ignore
+globalThis.postfix = removeLanguagePostfix;

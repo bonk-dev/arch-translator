@@ -3,6 +3,7 @@ import {getMwApi} from "./Utilities/MediaWikiApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/RevisionTools";
 import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
+import {cacheCurrentPageContent, getCurrentPageContent} from "./Utilities/PageUtils";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -11,6 +12,9 @@ globalThis.getMwApi = getMwApi;
 globalThis.getId = getCachedPageInfo;
 // @ts-ignore
 globalThis.setId = setCachedPageInfo;
+
+// @ts-ignore
+globalThis.getContent = getCurrentPageContent;
 
 setupDb()
     .then(() => {
@@ -30,7 +34,14 @@ setupDb()
             console.debug(api.config.values.wgTitle);
         });
         manager.onEditForm((form) => {
-            console.debug('form hook');
+            console.debug('editform hook');
+
+            const codeMirror = form.find('.CodeMirror');
+            if (codeMirror.length > 0) {
+                console.debug('CodeMirror found');
+                // @ts-ignore
+                cacheCurrentPageContent(codeMirror.get()[0].CodeMirror.getValue());
+            }
         });
 
         manager.startAgents();
