@@ -11,7 +11,13 @@ const ctx = await esbuild.context({
 });
 
 async function build() {
-    await ctx.rebuild();
+    try {
+        await ctx.rebuild();
+    } catch (e) {
+        console.error('Build failed');
+        console.error(e);
+        return;
+    }
 
     console.log('Prepending userscript header');
 
