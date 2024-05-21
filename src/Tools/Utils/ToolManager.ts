@@ -61,6 +61,25 @@ export class ToolManager {
     }
 
     /**
+     * Adds a custom <a> (anchor) tool to the sidebar
+     * @param name
+     * @param displayText
+     * @param onClick
+     */
+    public addSimpleSidebarTool(name: string, displayText: string, onClick: (this:HTMLAnchorElement, ev: MouseEvent) => any) {
+        const listItem = document.createElement('li');
+        listItem.id = `t-at-${name}`;
+        listItem.classList.add('mw-list-item');
+
+        const aElement = document.createElement('a');
+        aElement.innerHTML = displayText;
+        aElement.addEventListener('click', onClick)
+        listItem.appendChild(aElement);
+
+        this._sidebarToolSection.list.appendChild(listItem);
+    }
+
+    /**
      * Adds the footer tools to the DOM
      * @param editForm The JQuery element from editForm hook
      */
