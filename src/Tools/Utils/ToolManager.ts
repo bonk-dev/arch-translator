@@ -51,6 +51,9 @@ export class ToolManager {
 
         if (parent == null) {
             parent = document.getElementById('vector-page-tools');
+            if (parent == null) {
+                throw new Error('Could not find vector-page-tools');
+            }
         }
 
         parent.appendChild(this._sidebarToolSection.rootElement);
