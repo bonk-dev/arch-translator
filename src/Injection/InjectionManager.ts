@@ -108,7 +108,10 @@ export class InjectionManager {
                     })
                 }
                 else {
-                    console.warn('hook is not null')
+                    if (onHookReady != null) {
+                        // TODO: I doubt anyone is going to use two injection managers at the same time anyways
+                        onHookReady();
+                    }
                 }
             });
     }
