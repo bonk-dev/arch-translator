@@ -5,12 +5,12 @@ type ToolSection = {
     list: HTMLUListElement
 };
 
-type CustomSidebarTool = {
+export type CustomSidebarTool = {
     name: string
     toolElement: HTMLAnchorElement
 };
 
-type CustomFooterTool = {
+export type CustomFooterTool = {
     name: string
     header: string
     toolElement: HTMLElement
@@ -22,6 +22,23 @@ type RegisteredFooterTool = {
     tool: HTMLElement
     toggler: HTMLElement
 };
+
+type SimpleSidebarTool = {
+    name: string
+    displayText: string
+    handler: (this:HTMLAnchorElement, ev: MouseEvent) => any
+};
+
+export function sideTool(toolInfo: SimpleSidebarTool): CustomSidebarTool {
+    const element = document.createElement('a');
+    element.innerHTML = toolInfo.displayText;
+    element.addEventListener('click', toolInfo.handler);
+
+    return {
+        name: toolInfo.name,
+        toolElement: element
+    };
+}
 
 export class ToolManager {
     private static _instance: ToolManager|null = null;
@@ -58,25 +75,6 @@ export class ToolManager {
 
         parent.appendChild(this._sidebarToolSection.rootElement);
         this._sidebarToolSectionAddedToDom = true;
-    }
-
-    /**
-     * Adds a custom <a> (anchor) tool to the sidebar
-     * @param name
-     * @param displayText
-     * @param onClick
-     */
-    public addSimpleSidebarTool(name: string, displayText: string, onClick: (this:HTMLAnchorElement, ev: MouseEvent) => any) {
-        const listItem = document.createElement('li');
-        listItem.id = `t-at-${name}`;
-        listItem.classList.add('mw-list-item');
-
-        const aElement = document.createElement('a');
-        aElement.innerHTML = displayText;
-        aElement.addEventListener('click', onClick)
-        listItem.appendChild(aElement);
-
-        this._sidebarToolSection.list.appendChild(listItem);
     }
 
     /**
