@@ -3,7 +3,7 @@ import {getMwApi} from "./Utilities/MediaWikiApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/RevisionTools";
 import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
-import {cacheCurrentPageContent, getCurrentPageContent} from "./Utilities/PageUtils";
+import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo} from "./Utilities/PageUtils";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -24,8 +24,10 @@ setupDb()
         manager.on(GenericLoadStep.DocumentLoad, () => {
             console.debug('Document loaded');
 
+            // TODO: Sync up with MediaWikiStartup
+            const pageInfo = getCurrentPageInfo();
             for (const tool of allSidebarTools) {
-                ToolManager.instance.addSidebarTool(tool);
+                ToolManager.instance.addSidebarTool(tool, pageInfo);
             }
             ToolManager.instance.addSidebarToPage();
         });

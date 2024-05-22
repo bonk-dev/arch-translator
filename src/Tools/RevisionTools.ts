@@ -1,5 +1,6 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiApi";
+import {PageInfo} from "../Utilities/PageUtils";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     const toolHandler = async () => {
@@ -18,6 +19,28 @@ export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     });
 };
 
+export const copyEnglishRevisionIdTool = (): CustomSidebarTool => {
+    const handler = () => {
+        console.debug('English rev id');
+    };
+
+    const showCallback = (info: PageInfo): boolean => {
+        if (!info.isTranslated) {
+            console.debug("Hiding copy English revision ID tool because current page is not a translation");
+            return false;
+        }
+
+        return true;
+    };
+
+    return sideTool({
+        name: "copy-english-revision-id",
+        displayText: "Copy latest English revision ID",
+        handler: handler,
+        showCallback: showCallback
+    });
+};
+
 export const allSidebarTools = [
-    copyCurrentRevisionIdTool()
+    copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool()
 ];

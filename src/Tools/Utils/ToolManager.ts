@@ -1,4 +1,5 @@
 import {makeCollapsibleFooter} from "./CollapsibleFooter";
+import {PageInfo} from "../../Utilities/PageUtils";
 
 type ToolSection = {
     rootElement: HTMLElement
@@ -8,6 +9,7 @@ type ToolSection = {
 export type CustomSidebarTool = {
     name: string
     toolElement: HTMLAnchorElement
+    showCallback?: (pageInfo: PageInfo) => boolean
 };
 
 export type CustomFooterTool = {
@@ -27,6 +29,7 @@ type SimpleSidebarTool = {
     name: string
     displayText: string
     handler: (this:HTMLAnchorElement, ev: MouseEvent) => any
+    showCallback?: (pageInfo: PageInfo) => boolean
 };
 
 const toolInProgressClass = 'at-tool-inProgress';
@@ -50,7 +53,8 @@ export function sideTool(toolInfo: SimpleSidebarTool): CustomSidebarTool {
 
     return {
         name: toolInfo.name,
-        toolElement: element
+        toolElement: element,
+        showCallback: toolInfo.showCallback
     };
 }
 
@@ -109,8 +113,13 @@ export class ToolManager {
     /**
      * Adds a custom tool to the sidebar
      * @param tool
+     * @param currentPageInfo Used to hide useless tools based on the info about the current page
      */
-    public addSidebarTool(tool: CustomSidebarTool) {
+    public addSidebarTool(tool: CustomSidebarTool, currentPageInfo: PageInfo) {
+        if (tool.showCallback != null && !tool.showCallback(currentPageInfo)) {
+            return;
+        }
+
         const listItem = document.createElement('li');
         listItem.id = `t-at-${tool.name}`;
         listItem.classList.add('mw-list-item');

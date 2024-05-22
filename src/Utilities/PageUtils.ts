@@ -35,7 +35,7 @@ enum PageType {
     Other = 4
 }
 
-type PageInfo = {
+export type PageInfo = {
     isRedirect: boolean
     isTranslated: boolean
     latestRevisionId: number
