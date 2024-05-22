@@ -63,7 +63,7 @@ setupDb()
                 if (pageInfo.pageType === PageType.CreateEditor) {
                     const newTranslationWorker = new NewArticleWorker(pageInfo, cmEditor);
                     newTranslationWorker.run()
-                        .then(w => console.debug("index: NewArticleWorker done"));
+                        .then(() => console.debug("index: NewArticleWorker done"));
                 }
             }
         });
