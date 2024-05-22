@@ -158,6 +158,8 @@ export async function getEnglishRevisionId(): Promise<number|null> {
     }
 
     const cachedInfo = await getCachedPageInfo(englishPageName);
+    console.debug(`getEnglishRevisionId english name: ${englishPageName}`);
+
     if (cachedInfo != null) {
         console.debug('getEnglishRevisionId: cache hit');
         return cachedInfo.latestRevisionId;

@@ -1,6 +1,6 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiApi";
-import {PageInfo} from "../Utilities/PageUtils";
+import {getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     const toolHandler = async () => {
@@ -20,8 +20,9 @@ export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
 };
 
 export const copyEnglishRevisionIdTool = (): CustomSidebarTool => {
-    const handler = () => {
-        console.debug('English rev id');
+    const handler = async () => {
+        const englishRevisionId = await getEnglishRevisionId();
+        console.debug('English revision id: ' + englishRevisionId);
     };
 
     const showCallback = (info: PageInfo): boolean => {
