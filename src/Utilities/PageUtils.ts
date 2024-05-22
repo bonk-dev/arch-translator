@@ -8,7 +8,7 @@ import {getCachedPageInfo} from "../Storage/ScriptDb";
  */
 let cachedPageContent: string|null = null;
 
-enum PageType {
+export enum PageType {
     /**
      * Normal article read page
      */

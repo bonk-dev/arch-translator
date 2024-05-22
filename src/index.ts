@@ -3,8 +3,10 @@ import {getMwApi} from "./Utilities/MediaWikiApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/SidebarTools";
 import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
-import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo} from "./Utilities/PageUtils";
+import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo, PageType} from "./Utilities/PageUtils";
 import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
+import {CodeMirrorEditor} from "./Utilities/CodeMirrorTypes";
+import {NewArticleWorker} from "./Tools/Workers/NewArticleWorker";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -16,6 +18,9 @@ globalThis.setId = setCachedPageInfo;
 
 // @ts-ignore
 globalThis.getContent = getCurrentPageContent;
+
+// wikieditor.editform can run multiple times
+let runEditHook = true;
 
 setupDb()
     .then(() => {
@@ -41,13 +46,25 @@ setupDb()
             ToolManager.instance.addSidebarToPage();
         });
         manager.onEditForm((form) => {
+            if (!runEditHook) return;
+
             console.debug('editform hook');
 
-            const codeMirror = form.find('.CodeMirror');
-            if (codeMirror.length > 0) {
+            const codeMirrorElement = form.find('.CodeMirror');
+            if (codeMirrorElement.length > 0) {
                 console.debug('CodeMirror found');
+                runEditHook = false;
+
                 // @ts-ignore
-                cacheCurrentPageContent(codeMirror.get()[0].CodeMirror.getValue());
+                const cmEditor = codeMirrorElement.get()[0].CodeMirror as CodeMirrorEditor;
+                cacheCurrentPageContent(cmEditor.getValue());
+
+                const pageInfo = getCurrentPageInfo();
+                if (pageInfo.pageType === PageType.CreateEditor) {
+                    const newTranslationWorker = new NewArticleWorker(pageInfo, cmEditor);
+                    newTranslationWorker.run()
+                        .then(w => console.debug("index: NewArticleWorker done"));
+                }
             }
         });
 
