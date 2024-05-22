@@ -1,7 +1,10 @@
-import {PageInfo, PageType} from "../../Utilities/PageUtils";
+import {getEnglishRevisionId, PageInfo, pageNameToTitle, PageType} from "../../Utilities/PageUtils";
 import {getPageContent} from "../../Utilities/MediaWikiClient";
 import {removeLanguagePostfix} from "../../Internalization/I18nConstants";
 import {CodeMirrorEditor} from "../../Utilities/CodeMirrorTypes";
+import {WikiTextParser} from "../../Utilities/WikiTextParser";
+import {buildTranslationStatusTemplate} from "../../Utilities/TemplateUtils";
+import {getCurrentLanguage} from "../../Storage/ScriptDb";
 
 export class NewArticleWorker {
     private _info: PageInfo;
@@ -24,6 +27,25 @@ export class NewArticleWorker {
         console.debug(`NewArticleWorker: fetching content of ${englishName}`);
 
         const content = await getPageContent(englishName);
-        this._codeMirror.setValue(content);
+        const parser = new WikiTextParser();
+        parser.parse(content);
+
+        const englishTitle = pageNameToTitle(englishName);
+        parser.addInterlanguageLink(`[[en:${englishTitle}]]`, 'en');
+
+        const currentLanguage = await getCurrentLanguage();
+        const englishRevisionId = await getEnglishRevisionId();
+        if (englishRevisionId) {
+            console.warn('NewArticleWorker: englishRevisionId was null');
+        }
+
+        const translationStatus = buildTranslationStatusTemplate(
+            englishName,
+            new Date(),
+            englishRevisionId ?? 0,
+            currentLanguage);
+        parser.addTemplate(translationStatus);
+
+        this._codeMirror.setValue(parser.pageContent);
     }
 }

@@ -56,6 +56,10 @@ export const LanguagesInfo: { [key: string]: LanguageInfo } = {
 const validLangPostfixes = Object
     .values(LanguagesInfo)
     .map(i => '(' + i.localizedName + ')');
+export const validLangSubtags: string[] = Object
+    .values(LanguagesInfo)
+    .filter(i => i.subtag != null)
+    .map(i => i.subtag!);
 
 export function isTranslated(title: string): boolean {
     for (const postfix of validLangPostfixes) {

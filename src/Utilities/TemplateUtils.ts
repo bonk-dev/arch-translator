@@ -7,9 +7,10 @@ const translateTemplate = (template: string, language?: LanguageInfo) => {
 };
 
 export const buildTranslationStatusTemplate = (englishName: string,
-                                       date: string,
+                                       date: Date,
                                        englishRevisionId: number,
                                        language?: LanguageInfo): string => {
-    const templateName = translateTemplate('TranslationStatus');
-    return `{{${templateName}|${englishName}|${date}|${englishRevisionId}}}`;
+    const templateName = translateTemplate('TranslationStatus', language);
+    const formattedDate = date.toISOString().split('T')[0];
+    return `{{${templateName}|${englishName}|${formattedDate}|${englishRevisionId}}}`;
 };

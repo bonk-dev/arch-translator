@@ -168,3 +168,7 @@ export async function getEnglishRevisionId(): Promise<number|null> {
     // TODO
     return null;
 }
+
+export function pageNameToTitle(pageName: string){
+    return pageName.replaceAll("_", "");
+}
