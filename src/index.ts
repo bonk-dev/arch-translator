@@ -4,6 +4,7 @@ import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/RevisionTools";
 import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
 import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo} from "./Utilities/PageUtils";
+import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -34,6 +35,11 @@ setupDb()
         manager.on(GenericLoadStep.MediaWikiStartup, () => {
             const api = getMwApi();
             console.debug(api.config.values.wgTitle);
+
+            cacheCurrentPage()
+                .then(() => {
+                    console.debug('index (MediaWikiStartup): cached current page');
+                });
         });
         manager.onEditForm((form) => {
             console.debug('editform hook');

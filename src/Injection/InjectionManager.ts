@@ -66,6 +66,7 @@ export class InjectionManager {
 
     public startAgents() {
         onHookReady = () => {
+            this.fire(GenericLoadStep.MediaWikiStartup);
             getMwApi().hook('wikipage.editform')
                 .add((jQueryEditForm: JQuery) => {
                     this.fireEditForm(jQueryEditForm);
