@@ -6,5 +6,5 @@ export enum CachedPageInfoType {
 
 export type CachedPageInfo =
     | { type: CachedPageInfoType.English, pageName: string, latestRevisionId: number }
-    | { type: CachedPageInfoType.Translated, pageName: string, latestRevisionId: number, translationRevisionId: number }
+    | { type: CachedPageInfoType.Translated, pageName: string, latestRevisionId: number, latestEnglishRevisionId: number }
     | { type: CachedPageInfoType.Redirect, pageName: string, latestRevisionId: number, redirectsTo: string };

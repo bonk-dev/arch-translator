@@ -1,4 +1,4 @@
-import {getCurrentPageContent, getCurrentPageInfo} from "../Utilities/PageUtils";
+import {getCurrentPageContent, getCurrentPageInfo, getEnglishRevisionId} from "../Utilities/PageUtils";
 import {setCachedPageInfo} from "../Storage/ScriptDb";
 import {CachedPageInfoType} from "../Storage/ScriptDbModels";
 import {findRedirect} from "../Utilities/WikiTextParser";
@@ -13,7 +13,7 @@ export const cacheCurrentPage = async () => {
         await setCachedPageInfo({
             latestRevisionId: info.latestRevisionId,
             pageName: info.pageName,
-            translationRevisionId: 3,
+            latestEnglishRevisionId: await getEnglishRevisionId() ?? -1,
             type: CachedPageInfoType.Translated
         });
     }
