@@ -1,4 +1,4 @@
-import {getCurrentPageContent, getCurrentPageInfo, getEnglishRevisionId} from "../Utilities/PageUtils";
+import {getCurrentPageContent, getCurrentPageInfo} from "../Utilities/PageUtils";
 import {setCachedPageInfo} from "../Storage/ScriptDb";
 import {CachedPageInfoType} from "../Storage/ScriptDbModels";
 import {findRedirect} from "../Utilities/WikiTextParser";
@@ -9,15 +9,7 @@ import {findRedirect} from "../Utilities/WikiTextParser";
 export const cacheCurrentPage = async () => {
     const info = getCurrentPageInfo();
 
-    if (info.isTranslated) {
-        await setCachedPageInfo({
-            latestRevisionId: info.latestRevisionId,
-            pageName: info.pageName,
-            latestEnglishRevisionId: await getEnglishRevisionId() ?? -1,
-            type: CachedPageInfoType.Translated
-        });
-    }
-    else if (info.isRedirect) {
+    if (info.isRedirect) {
         const content = await getCurrentPageContent();
         const redirectTarget = findRedirect(content);
         if (redirectTarget == null) {
@@ -35,7 +27,7 @@ export const cacheCurrentPage = async () => {
         await setCachedPageInfo({
             latestRevisionId: info.latestRevisionId,
             pageName: info.pageName,
-            type: CachedPageInfoType.English
+            type: info.isTranslated ? CachedPageInfoType.Translated : CachedPageInfoType.English
         });
     }
 };
