@@ -1,4 +1,4 @@
-import {getCurrentPageContent, getCurrentPageInfo} from "../Utilities/PageUtils";
+import {getCurrentPageContent, getCurrentPageInfo, PageType} from "../Utilities/PageUtils";
 import {setCachedPageInfo} from "../Storage/ScriptDb";
 import {CachedPageInfoType} from "../Storage/ScriptDbModels";
 import {findRedirect} from "../Utilities/WikiTextParser";
@@ -8,6 +8,7 @@ import {findRedirect} from "../Utilities/WikiTextParser";
  */
 export const cacheCurrentPage = async () => {
     const info = getCurrentPageInfo();
+    if (info.pageType !== PageType.Read) return;
 
     if (info.isRedirect) {
         const content = await getCurrentPageContent();
