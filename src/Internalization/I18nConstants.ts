@@ -1,4 +1,6 @@
-class LanguageInfo {
+import {post} from "jquery";
+
+export class LanguageInfo {
     englishName: string
     localizedName: string
     subtag: string|null
@@ -55,7 +57,7 @@ export const LanguagesInfo = {
 
 const validLangPostfixes = Object
     .values(LanguagesInfo)
-    .map(i => i.localizedName);
+    .map(i => '(' + i.localizedName + ')');
 
 export function isTranslated(title: string): boolean {
     for (const postfix of validLangPostfixes) {
@@ -69,7 +71,7 @@ export function isTranslated(title: string): boolean {
 
 export function removeLanguagePostfix(pageOrTitle: string) {
     for (const postfix of validLangPostfixes) {
-        if (pageOrTitle.endsWith(`(${postfix})`)) {
+        if (pageOrTitle.endsWith(postfix)) {
             return pageOrTitle.substring(0, pageOrTitle.length - 1 - (postfix.length + 2));
         }
     }
