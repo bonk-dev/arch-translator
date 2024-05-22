@@ -24,13 +24,6 @@ setupDb()
         const manager = new InjectionManager();
         manager.on(GenericLoadStep.DocumentLoad, () => {
             console.debug('Document loaded');
-
-            // TODO: Sync up with MediaWikiStartup
-            const pageInfo = getCurrentPageInfo();
-            for (const tool of allSidebarTools) {
-                ToolManager.instance.addSidebarTool(tool, pageInfo);
-            }
-            ToolManager.instance.addSidebarToPage();
         });
         manager.on(GenericLoadStep.MediaWikiStartup, () => {
             const api = getMwApi();
@@ -40,6 +33,12 @@ setupDb()
                 .then(() => {
                     console.debug('index (MediaWikiStartup): cached current page');
                 });
+
+            const pageInfo = getCurrentPageInfo();
+            for (const tool of allSidebarTools) {
+                ToolManager.instance.addSidebarTool(tool, pageInfo);
+            }
+            ToolManager.instance.addSidebarToPage();
         });
         manager.onEditForm((form) => {
             console.debug('editform hook');
