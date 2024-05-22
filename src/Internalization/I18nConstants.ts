@@ -12,7 +12,7 @@ export class LanguageInfo {
     }
 }
 
-export const LanguagesInfo = {
+export const LanguagesInfo: { [key: string]: LanguageInfo } = {
     Arabic: new LanguageInfo('ar', 'Arabic', 'العربية'),
     Bangla: new LanguageInfo(null, 'Bangla', 'বাংলা'),
     Bosnian: new LanguageInfo('bs', 'Bosnian', 'Bosanski'),
@@ -79,5 +79,11 @@ export function removeLanguagePostfix(pageOrTitle: string) {
     return pageOrTitle;
 }
 
-// @ts-ignore
-globalThis.postfix = removeLanguagePostfix;
+export function getLangInfoFor(key: string): LanguageInfo {
+    const info = LanguagesInfo[key];
+    if (info == null) {
+        throw new Error(`Invalid language key: ${key}`);
+    }
+
+    return info;
+}
