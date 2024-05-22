@@ -1,5 +1,3 @@
-import {post} from "jquery";
-
 export class LanguageInfo {
     englishName: string
     localizedName: string
