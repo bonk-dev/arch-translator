@@ -8,8 +8,20 @@ const ctx = await esbuild.context({
     entryPoints: ['src/index.ts'],
     bundle: true,
     outfile: tmpPath,
-    sourcemap: 'inline' // TODO: Offset sourcemap lines by amount of lines in uscript-header.txt
+    sourcemap: 'external'
 });
+
+const NEW_LINE_ASCII = 0x0A;
+
+function countNewLines(buffer) {
+    let count = 0;
+    for (let i = 0; i < buffer.length; ++i) {
+        if (buffer[i] === NEW_LINE_ASCII) {
+            count++;
+        }
+    }
+    return count;
+}
 
 async function build() {
     try {
@@ -24,10 +36,23 @@ async function build() {
 
     const bundle = fs.readFileSync(tmpPath);
     const header = fs.readFileSync('src/uscript-header.txt');
-    const bundleHandle = fs.openSync(outPath, 'w');
 
+    const srcMap = JSON.parse(fs.readFileSync(tmpPath + '.map').toString());
+    let srcMapOffset = '';
+    for (let i = 0; i < countNewLines(header); ++i) {
+        srcMapOffset += ';'; // ; represents a newline in the mappings
+    }
+    srcMap['mappings'] = srcMapOffset + srcMap['mappings'];
+
+    const bundleHandle = fs.openSync(outPath, 'w');
     fs.writeSync(bundleHandle, header, 0, header.length, 0);
     fs.writeSync(bundleHandle, bundle, 0, bundle.length, header.length);
+
+    // inline the modified srcmap
+    const srcMapJsonB64 = Buffer.from(JSON.stringify(srcMap), 'utf8');
+    const srcMapString = '//# sourceMappingURL=data:application/json;base64,'  + srcMapJsonB64.toString('base64');
+    const srcMapBuffer = Buffer.from(srcMapString, 'utf8');
+    fs.writeSync(bundleHandle, srcMapBuffer, 0, srcMapBuffer.length, header.length + bundle.length);
 
     fs.closeSync(bundleHandle);
 }
