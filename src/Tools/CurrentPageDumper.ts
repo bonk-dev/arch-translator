@@ -31,4 +31,11 @@ export const cacheCurrentPage = async () => {
             type: CachedPageInfoType.Redirect
         });
     }
+    else {
+        await setCachedPageInfo({
+            latestRevisionId: info.latestRevisionId,
+            pageName: info.pageName,
+            type: CachedPageInfoType.English
+        });
+    }
 };
