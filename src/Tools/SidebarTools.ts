@@ -1,6 +1,7 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiApi";
-import {getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
+import {getCurrentPageInfo, getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
+import {getCurrentLanguage} from "../Storage/ScriptDb";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     const toolHandler = async () => {
@@ -42,6 +43,34 @@ export const copyEnglishRevisionIdTool = (): CustomSidebarTool => {
     });
 };
 
+export const createTranslationTool = (): CustomSidebarTool => {
+    const handler = async () => {
+        const pageInfo = getCurrentPageInfo();
+        const currentLang = await getCurrentLanguage();
+        const translationPageName = `${pageInfo.pageName}_(${currentLang.localizedName})`;
+        const target = `/index.php?title=${encodeURIComponent(translationPageName)}`;
+
+        console.debug(`createTranslationTool: navigating to ${target}`);
+        window.location.assign(target);
+    };
+
+    const showCallback = (info: PageInfo): boolean => {
+        if (info.isTranslated) {
+            console.debug("Hiding create translation tool because current page is already a translation");
+            return false;
+        }
+
+        return true;
+    };
+
+    return sideTool({
+        name: "create-translation",
+        displayText: "Translate this page",
+        handler: handler,
+        showCallback: showCallback
+    });
+};
+
 export const allSidebarTools = [
-    copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool()
+    copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool(), createTranslationTool()
 ];

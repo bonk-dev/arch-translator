@@ -1,7 +1,7 @@
 import {GenericLoadStep, InjectionManager} from "./Injection/InjectionManager";
 import {getMwApi} from "./Utilities/MediaWikiApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
-import {allSidebarTools} from "./Tools/RevisionTools";
+import {allSidebarTools} from "./Tools/SidebarTools";
 import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
 import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo} from "./Utilities/PageUtils";
 import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
