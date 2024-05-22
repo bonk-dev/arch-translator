@@ -48,7 +48,7 @@ export const createTranslationTool = (): CustomSidebarTool => {
         const pageInfo = getCurrentPageInfo();
         const currentLang = await getCurrentLanguage();
         const translationPageName = `${pageInfo.pageName}_(${currentLang.localizedName})`;
-        const target = `/index.php?title=${encodeURIComponent(translationPageName)}`;
+        const target = `/index.php?title=${encodeURIComponent(translationPageName)}&action=edit`;
 
         console.debug(`createTranslationTool: navigating to ${target}`);
         window.location.assign(target);
