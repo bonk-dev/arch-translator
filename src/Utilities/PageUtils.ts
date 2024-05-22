@@ -143,9 +143,9 @@ export async function getCurrentPageContent() {
 }
 
 /**
- * Fetches the latest revision ID of the translation of the current page
+ * Fetches the latest revision ID of the original English page
  */
-export async function getTranslationRevisionId(): Promise<number|null> {
+export async function getEnglishRevisionId(): Promise<number|null> {
     const info = getCurrentPageInfo();
     if (!info.isTranslated) {
         throw new Error("The current page is not a translation");
@@ -153,13 +153,13 @@ export async function getTranslationRevisionId(): Promise<number|null> {
 
     const englishPageName = removeLanguagePostfix(info.pageName);
     if (englishPageName === info.pageName) {
-        console.warn(`getTranslationRevisionId: Could not get the English for the ${info.pageName}`)
+        console.warn(`getEnglishRevisionId: Could not get the English for the ${info.pageName}`)
         return null;
     }
 
     const cachedInfo = await getCachedPageInfo(englishPageName);
     if (cachedInfo != null) {
-        console.debug('getTranslationRevisionId: cache hit');
+        console.debug('getEnglishRevisionId: cache hit');
         return cachedInfo.latestRevisionId;
     }
 
