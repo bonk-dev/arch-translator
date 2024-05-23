@@ -10,6 +10,7 @@ import {NewArticleWorker} from "./Tools/Workers/NewArticleWorker";
 import {WikiTextParser} from "./Utilities/WikiTextParser";
 import {getPageContent} from "./Utilities/MediaWikiClient";
 import {removeLanguagePostfix} from "./Internalization/I18nConstants";
+import {TranslatedArticlesWorker} from "./Tools/Workers/TranslatedArticlesWorker";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -63,19 +64,30 @@ setupDb()
                 cacheCurrentPageContent(cmEditor.getValue());
 
                 const pageInfo = getCurrentPageInfo();
-                if (pageInfo.pageType === PageType.CreateEditor) {
+                if (pageInfo.pageType === PageType.CreateEditor || pageInfo.pageType === PageType.Editor) {
                     const info = getCurrentPageInfo();
                     const englishContent = await getPageContent(removeLanguagePostfix(info.pageName));
                     const parser = new WikiTextParser();
                     parser.parse(englishContent);
 
                     const newTranslationWorker = new NewArticleWorker(pageInfo);
-                    const workerPromises = [
-                        newTranslationWorker.run(parser)
-                    ];
+                    const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
+                    translatedArticleWorker.run(parser)
+                        .then(() => {
+                            console.debug('Translated articles worker done');
+                        });
 
-                    await Promise.all(workerPromises);
-                    cmEditor.setValue(parser.pageContent);
+                    if (pageInfo.pageType === PageType.CreateEditor) {
+                        // no need to await translatedArticleWorker.run(...), it does not make any changes to the parser
+                        const workerPromises = [
+                            newTranslationWorker.run(parser)
+                        ];
+
+                        await Promise.all(workerPromises);
+                        const newContent = parser.pageContent;
+                        cacheCurrentPageContent(newContent);
+                        cmEditor.setValue(newContent);
+                    }
                 }
             }
         });

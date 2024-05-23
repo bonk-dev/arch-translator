@@ -71,10 +71,24 @@ export function isTranslated(title: string): boolean {
     return false;
 }
 
-export function removeLanguagePostfix(pageOrTitle: string) {
+export function removeLanguagePostfix(pageOrTitle: string): string {
+    const remove = (target: string, postfix: string): string => {
+        return target.substring(0, target.length - 1 - postfix.length);
+    };
+
     for (const postfix of validLangPostfixes) {
-        if (pageOrTitle.endsWith(postfix)) {
-            return pageOrTitle.substring(0, pageOrTitle.length - 1 - postfix.length);
+        if (!pageOrTitle.endsWith(postfix)) {
+            continue;
+        }
+
+        const split = pageOrTitle.split('/');
+        if (split.length <= 1) {
+            return remove(pageOrTitle, postfix);
+        }
+        else {
+            return split
+                .map(part => remove(part, postfix))
+                .join('/');
         }
     }
 
