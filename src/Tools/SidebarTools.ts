@@ -24,6 +24,8 @@ export const copyEnglishRevisionIdTool = (): CustomSidebarTool => {
     const handler = async () => {
         const englishRevisionId = await getEnglishRevisionId();
         console.debug('English revision id: ' + englishRevisionId);
+
+        await window.navigator.clipboard.writeText(englishRevisionId?.toString() ?? 'null');
     };
 
     const showCallback = (info: PageInfo): boolean => {
