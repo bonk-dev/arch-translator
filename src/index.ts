@@ -7,6 +7,9 @@ import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo, Page
 import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
 import {CodeMirrorEditor} from "./Utilities/CodeMirrorTypes";
 import {NewArticleWorker} from "./Tools/Workers/NewArticleWorker";
+import {WikiTextParser} from "./Utilities/WikiTextParser";
+import {getPageContent} from "./Utilities/MediaWikiClient";
+import {removeLanguagePostfix} from "./Internalization/I18nConstants";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -45,7 +48,7 @@ setupDb()
             }
             ToolManager.instance.addSidebarToPage();
         });
-        manager.onEditForm((form) => {
+        manager.onEditForm(async (form) => {
             if (!runEditHook) return;
 
             console.debug('editform hook');
@@ -61,9 +64,18 @@ setupDb()
 
                 const pageInfo = getCurrentPageInfo();
                 if (pageInfo.pageType === PageType.CreateEditor) {
-                    const newTranslationWorker = new NewArticleWorker(pageInfo, cmEditor);
-                    newTranslationWorker.run()
-                        .then(() => console.debug("index: NewArticleWorker done"));
+                    const info = getCurrentPageInfo();
+                    const englishContent = await getPageContent(removeLanguagePostfix(info.pageName));
+                    const parser = new WikiTextParser();
+                    parser.parse(englishContent);
+
+                    const newTranslationWorker = new NewArticleWorker(pageInfo);
+                    const workerPromises = [
+                        newTranslationWorker.run(parser)
+                    ];
+
+                    await Promise.all(workerPromises);
+                    cmEditor.setValue(parser.pageContent);
                 }
             }
         });
