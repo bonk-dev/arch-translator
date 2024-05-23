@@ -138,12 +138,20 @@ export class WikiTextParser {
     }
 
     public get localizableLinks() {
+        const firstCapitalLetter = (str: string) => {
+            if (str.length < 2) {
+                return str.toUpperCase();
+            }
+
+            return `${str[0].toUpperCase()}${str.substring(1)}`;
+        };
+
         return [
-            ...this._links
+            ...new Set(this._links
                 .filter(l => !isTranslated(l.link)
                     && (l.linkType === WikiLinkType.Category
                         || l.linkType === WikiLinkType.Article))
-                .map(l => l.link)
+                .map(l => firstCapitalLetter(l.link)))
         ]
     }
 
