@@ -5,7 +5,7 @@
 // @grant       none
 // @version     2.0.0
 // @author      bonk-dev
-// @description Tools for making translating articles easier. Works on the new Vector theme
+// @description Useful tools for ArchWiki translators, now written in TypeScript.
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
 // @license     MIT
 // @run-at      document-start
