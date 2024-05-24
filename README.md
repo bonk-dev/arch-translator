@@ -1,24 +1,43 @@
 # ArchTranslator
-Scripts to make translating ArchWiki easier. This script assumes that you are translating from English to Polish.
+![License Badge](https://img.shields.io/github/license/bonk-dev/arch-translator?style=flat-square)
+
+Useful tools for ArchWiki translators, now written in TypeScript.
 
 ## Usage
-Change LOCALIZED_LANG_NAME to your own language before use.
+- Install the UserScript
+- Change the active language (the default is Polish):
+
+![Change language tool](assets/change-lang.png)
+
+## Build
+You can build the script yourself:
+
+Remember to install the dev dependencies:
+`npm install`
+
+Single build:
+`npm run build`
+
+Build on change:
+`npm run watch`
+
+The three (two usable) files will be in the `build/` directory:
+- `arch-translator.user.js` - ready to use UserScript
+- `arch-translator.srcmap.user.js` - ready to use UserScript but with inlined sourcemap
+- `arch-translator.js` - raw output from [esbuild](https://esbuild.github.io/) 
+(no UserScript header)
 
 ## Features
 - Copies and pastes the original source;
-- Inserts the [localized] ic|TranslationStatus template;
+- Inserts the localized {{TranslationStatus}} template;
 - Inserts the English interlanguage link;
-- Sorts the header elements according to the ArchWiki layout.
-- Checks whether any of the linked English versions of articles have already been translated
+- Sorts the header elements according to the ArchWiki style;
+- Scans the page content for already translated articles.
 
-### Localized articles scanner
+### Translated articles scanner
 The script scans the article for links to other articles and checks if these articles have
-been already translated to language of choice. It keeps the search results in local 
-cache for 6 hours by default. 
+been already translated to the language of choice.
 
-For example, this page contains many links to English (original) articles. The script
-found out that AUR has Polish translation while the red links do not:
-![Localized articles UI](assets/localized-links.png)
-
-## Working on
-- Support for multiple languages (mainly the localized link caching)
+In this [example](https://wiki.archlinux.org/index.php?title=Wireshark_(Polski)&action=edit) we can see that the page content contains many links to English pages.
+Pages highlighted in green have a translation page.
+![Translated articles scanner UI](assets/translated-articles.png)

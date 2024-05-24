@@ -1,0 +1,31 @@
+{
+  "name": "arch-translator",
+  "version": "2.0.0",
+  "description": "Useful tools for ArchWiki translators, now written in TypeScript.",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.mjs build",
+    "watch": "node build.mjs watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bonk-dev/arch-translator.git"
+  },
+  "keywords": [
+    "javascript",
+    "typescript",
+    "archlinux",
+    "archwiki"
+  ],
+  "author": "bonk-dev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bonk-dev/arch-translator/issues"
+  },
+  "homepage": "https://github.com/bonk-dev/arch-translator#readme",
+  "devDependencies": {
+    "@types/jquery": "^3.5.30",
+    "chokidar": "^3.6.0",
+    "esbuild": "0.21.3"
+  }
+}
