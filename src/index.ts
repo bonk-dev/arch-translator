@@ -15,6 +15,8 @@ import {addTranslatedArticlesUi, addWorkerResultToUi} from "./Tools/TranslatedAr
 import {injectCssCode} from "./Utilities/CssInjector";
 // @ts-ignore
 import tableCss from './Styles/WikiTable.css';
+// @ts-ignore
+import commonCss from './Styles/Common.css';
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -37,6 +39,7 @@ setupDb()
         const manager = new InjectionManager();
         manager.on(GenericLoadStep.DocumentLoad, () => {
             console.debug('Document loaded');
+            injectCssCode(commonCss);
             injectCssCode(tableCss);
         });
         manager.on(GenericLoadStep.MediaWikiStartup, () => {

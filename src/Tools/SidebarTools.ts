@@ -1,7 +1,8 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiApi";
 import {getCurrentPageInfo, getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
-import {getCurrentLanguage} from "../Storage/ScriptDb";
+import {getCurrentLanguage, setCurrentLanguage} from "../Storage/ScriptDb";
+import {getLangInfoFor, LanguagesInfo} from "../Internalization/I18nConstants";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     const toolHandler = async () => {
@@ -73,6 +74,65 @@ export const createTranslationTool = (): CustomSidebarTool => {
     });
 };
 
+export const changeActiveLanguageTool = (): CustomSidebarTool => {
+    let anchorElement: HTMLAnchorElement | null = null;
+    let select: HTMLSelectElement | null = null;
+
+    const saveLanguage = async() => {
+        if (select == null) {
+            throw new Error("Tried to save the language when the UI was not yet created");
+        }
+
+        const newLanguage = getLangInfoFor(select.value);
+        await setCurrentLanguage(newLanguage);
+
+        alert(`The Arch Translator active language was changed to ${newLanguage.localizedName}. Please refresh the page.`);
+
+        select.parentElement!.classList.add('hidden');
+    };
+
+    const createChangeUi = async () => {
+        const parent = document.createElement('div');
+        parent.id = 'changeUi';
+
+        const selectElement = document.createElement('select');
+        for (const langInfo of Object.values(LanguagesInfo)) {
+            const option = document.createElement('option');
+            option.value = langInfo.englishName;
+            option.innerText = langInfo.localizedName;
+            selectElement.appendChild(option);
+        }
+        selectElement.onchange = saveLanguage;
+
+        const currentLang = await getCurrentLanguage();
+        selectElement.value = currentLang.englishName;
+
+        select = selectElement;
+        parent.appendChild(selectElement);
+
+        return parent;
+    };
+
+    const handler = async () => {
+        if (anchorElement == null) {
+            anchorElement = document.getElementById('t-at-change-language')! as HTMLAnchorElement;
+        }
+
+        if (select == null) {
+            const changeUi = await createChangeUi();
+            anchorElement.after(changeUi);
+        }
+
+        select!.parentElement!.classList.remove('hidden');
+    };
+
+    return sideTool({
+        name: "change-language",
+        displayText: "Change active language",
+        handler: handler
+    });
+};
+
 export const allSidebarTools = [
-    copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool(), createTranslationTool()
+    changeActiveLanguageTool(), copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool(), createTranslationTool()
 ];
