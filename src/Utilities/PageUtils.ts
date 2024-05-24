@@ -172,3 +172,7 @@ export async function getEnglishRevisionId(): Promise<number|null> {
 export function pageNameToTitle(pageName: string){
     return pageName.replaceAll("_", "");
 }
+
+export function titleToPageName(title: string) {
+    return title.replaceAll(" ", "_");
+}

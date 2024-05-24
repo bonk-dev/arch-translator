@@ -1,5 +1,6 @@
 import {RedirectResult, TranslatedArticlesResult} from "./Workers/TranslatedArticlesWorker";
 import {makeCollapsibleFooter} from "./Utils/CollapsibleFooter";
+import {titleToPageName} from "../Utilities/PageUtils";
 
 const LOCALIZED_LINKS_UI_STORE_KEY = "mwedit-state-arch-translator-translated-art";
 
@@ -54,6 +55,11 @@ export const addWorkerResultToUi = (result: TranslatedArticlesResult) => {
 
         return aOrder - bOrder;
     };
+    const linkify = (title: string, followRedirects: boolean = true) => {
+        return followRedirects
+            ? `/title/${titleToPageName(title)}`
+            : `/index.php?title=${encodeURIComponent(titleToPageName(title))}&redirect=no`;
+    };
 
     if (editFormLocalizedArticlesTable == null || tableBody == null) {
         throw new Error('editFormLocalizedArticlesTable was not created yet');
@@ -74,7 +80,7 @@ export const addWorkerResultToUi = (result: TranslatedArticlesResult) => {
         const className = 'green-link';
         row.classList.add(className);
 
-        row.innerHTML = `<td class="${className}">${existing}</td>`;
+        row.innerHTML = `<td class="${className}"><a href="${linkify(existing)}">${existing}</td></a>`;
         if (!existingRedirectCellAdded) {
             row.innerHTML += existingRedirectCell;
             existingRedirectCellAdded = true;
@@ -91,12 +97,17 @@ export const addWorkerResultToUi = (result: TranslatedArticlesResult) => {
         nameCell.className = redirect.exists
             ? 'green-link'
             : 'red-link';
-        nameCell.innerText = redirect.localizedRedirectTarget;
+        nameCell.innerHTML = redirect.exists ?
+            `<a href="${linkify(redirect.localizedRedirectTarget)}">${redirect.localizedRedirectTarget}</a>`
+            : redirect.localizedRedirectTarget;
         row.appendChild(nameCell);
 
         const redirectCell = document.createElement('td');
         redirectCell.className = className;
-        redirectCell.innerText = `${redirect.link} -> ${redirect.redirectsTo}`;
+
+        const redirectSrc = `<a href="${linkify(redirect.link, false)}">${redirect.link}</a>`;
+        const redirectTarget = `<a href="${linkify(redirect.redirectsTo)}">${redirect.redirectsTo}</a>`;
+        redirectCell.innerHTML = `${redirectSrc} -&gt; ${redirectTarget}`;
         row.appendChild(redirectCell);
 
         tableBody.appendChild(row);
