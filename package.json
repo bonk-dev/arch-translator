@@ -1,7 +1,7 @@
 {
   "name": "arch-translator",
   "version": "2.0.0",
-  "description": "Tools for making translating articles easier. Works on the new Vector theme",
+  "description": "Useful tools for ArchWiki translators, now written in TypeScript.",
   "main": "index.js",
   "scripts": {
     "build": "node build.mjs build",
@@ -13,6 +13,7 @@
   },
   "keywords": [
     "javascript",
+    "typescript",
     "archlinux",
     "archwiki"
   ],
