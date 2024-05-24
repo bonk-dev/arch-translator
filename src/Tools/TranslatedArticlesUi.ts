@@ -16,7 +16,7 @@ export const addTranslatedArticlesUi = ($editForm: JQuery) => {
                 <thead>
                     <tr>
                         <th>Localized name</th>
-                        <th>Redirects from</th>
+                        <th>Redirected from</th>
                     </tr>
                 </thead>
                 <tbody>
