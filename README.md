@@ -1,4 +1,6 @@
 # ArchTranslator
+![License Badge](https://img.shields.io/github/license/bonk-dev/arch-translator?style=flat-square)
+
 Useful tools for ArchWiki translators, now written in TypeScript.
 
 ## Usage
