@@ -73,7 +73,8 @@ setupDb()
                     const newTranslationWorker = new NewArticleWorker(pageInfo);
                     const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
                     translatedArticleWorker.run(parser)
-                        .then(() => {
+                        .then(r => {
+                            console.debug(r);
                             console.debug('Translated articles worker done');
                         });
 

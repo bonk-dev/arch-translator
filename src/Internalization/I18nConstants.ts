@@ -71,6 +71,7 @@ export function isTranslated(title: string): boolean {
     return false;
 }
 
+// TODO: Maybe add a class method to LanguageInfo class to avoid iterating over all of the postfixes all the time
 export function removeLanguagePostfix(pageOrTitle: string): string {
     const remove = (target: string, postfix: string): string => {
         return target.substring(0, target.length - 1 - postfix.length);

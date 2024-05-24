@@ -27,6 +27,32 @@ const localizeLink = (link: string, lang: LanguageInfo): string => {
         .join('/');
 };
 
+export type TranslatedArticlesResult = {
+    existing: string[]
+    notExisting: string[]
+    redirects: {
+        /**
+         * The original English link
+         */
+        link: string
+
+        /**
+         * The English redirect target
+         */
+        redirectsTo: string
+
+        /**
+         * redirectsTo value with added language postfix
+         */
+        localizedRedirectTarget: string
+
+        /**
+         * Whether the localizedRedirectTarget page exists
+         */
+        exists: boolean
+    }[]
+};
+
 export class TranslatedArticlesWorker {
     private _info: PageInfo;
 
@@ -39,8 +65,14 @@ export class TranslatedArticlesWorker {
             && this._info.isTranslated;
     }
 
-    async run(parser: WikiTextParser){
-        if (!this.willRun()) return;
+    async run(parser: WikiTextParser): Promise<TranslatedArticlesResult> {
+        if (!this.willRun()) {
+            return {
+                existing: [],
+                notExisting: [],
+                redirects: []
+            };
+        }
 
         const language = await getCurrentLanguage();
         const linksWithPostfixes = parser
@@ -52,8 +84,39 @@ export class TranslatedArticlesWorker {
         const possibleRedirects = info
             .filter(r => !r.exists)
             .map(r => removeLanguagePostfix(r.link));
-        const redirectsAndOthers = await this._findRedirects(possibleRedirects);
-        console.debug(redirectsAndOthers);
+        const redirectsAndOther = await this._findRedirects(possibleRedirects);
+        console.debug(redirectsAndOther.filter(r => r.redirects));
+
+        const actualRedirects = redirectsAndOther
+            .filter(r => r.redirects)
+            .map(r => localizeLink(r.redirectsTo!, language));
+        const redirectResults = await this._getPageInfosFor(actualRedirects);
+        console.debug(redirectResults);
+
+        const findRedirectSource = (localizedLink: string): string => {
+            const englishLink = removeLanguagePostfix(localizedLink);
+            if (englishLink === localizedLink) return localizedLink;
+
+            const original = redirectsAndOther.find(r => r.redirectsTo === englishLink)!;
+            return original.link!;
+        };
+
+        return {
+            existing: info
+                .filter(i => i.exists)
+                .map(r => r.link),
+            redirects: redirectResults.map(r => {
+                return {
+                    link: findRedirectSource(r.link),
+                    redirectsTo: removeLanguagePostfix(r.link),
+                    localizedRedirectTarget: r.link,
+                    exists: r.exists
+                }
+            }),
+            notExisting: redirectsAndOther
+                .filter(r => !r.redirects)
+                .map(r => localizeLink(r.link, language))
+        };
     }
 
     private async _getPageInfosFor(links: string[]): Promise<LinkScanResult[]> {
