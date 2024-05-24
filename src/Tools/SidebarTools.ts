@@ -93,19 +93,19 @@ export const changeActiveLanguageTool = (): CustomSidebarTool => {
 
     const createChangeUi = async () => {
         const parent = document.createElement('div');
-        parent.id = 'changeUi';
+        parent.classList.add('hidden');
 
         const selectElement = document.createElement('select');
-        for (const langInfo of Object.values(LanguagesInfo)) {
+        for (const [langKey, langInfo] of Object.entries(LanguagesInfo)) {
             const option = document.createElement('option');
-            option.value = langInfo.englishName;
+            option.value = langKey;
             option.innerText = langInfo.localizedName;
             selectElement.appendChild(option);
         }
         selectElement.onchange = saveLanguage;
 
         const currentLang = await getCurrentLanguage();
-        selectElement.value = currentLang.englishName;
+        selectElement.value = currentLang.key;
 
         select = selectElement;
         parent.appendChild(selectElement);
@@ -123,7 +123,7 @@ export const changeActiveLanguageTool = (): CustomSidebarTool => {
             anchorElement.after(changeUi);
         }
 
-        select!.parentElement!.classList.remove('hidden');
+        select!.parentElement!.classList.toggle('hidden');
     };
 
     return sideTool({

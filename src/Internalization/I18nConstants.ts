@@ -2,11 +2,14 @@ export class LanguageInfo {
     englishName: string
     localizedName: string
     subtag: string|null
+    key: string
 
-    constructor(subtag: string|null, englishName: string, localizedName: string) {
+    constructor(subtag: string|null, englishName: string, localizedName: string, customKey?: string) {
         this.subtag = subtag;
         this.englishName = englishName;
         this.localizedName = localizedName;
+
+        this.key = customKey ?? this.englishName;
     }
 }
 
@@ -17,9 +20,9 @@ export const LanguagesInfo: { [key: string]: LanguageInfo } = {
     Bulgarian: new LanguageInfo('bg', 'Bulgarian', 'Български'),
     Cantonese: new LanguageInfo(null, 'Cantonese', '粵語'),
     Catalan: new LanguageInfo('ca', 'Catalan', 'Català'),
-    ChineseClassical: new LanguageInfo(null, 'Chinese (Classical)', '文言文'),
-    ChineseSimplified: new LanguageInfo('zh-hans', 'Chinese (Simplified)', '简体中文'),
-    ChineseTraditional: new LanguageInfo('zh-hant', 'Chinese (Traditional)', '正體中文'),
+    ChineseClassical: new LanguageInfo(null, 'Chinese (Classical)', '文言文', 'ChineseClassical'),
+    ChineseSimplified: new LanguageInfo('zh-hans', 'Chinese (Simplified)', '简体中文', 'ChineseSimplified'),
+    ChineseTraditional: new LanguageInfo('zh-hant', 'Chinese (Traditional)', '正體中文', 'ChineseTraditional'),
     Croatian: new LanguageInfo('hr', 'Croatian', 'Hrvatski'),
     Czech: new LanguageInfo('cs', 'Czech', 'Čeština'),
     Danish: new LanguageInfo('da', 'Danish', 'Dansk'),
@@ -37,7 +40,7 @@ export const LanguagesInfo: { [key: string]: LanguageInfo } = {
     Japanese: new LanguageInfo('ja', 'Japanese', '日本語'),
     Korean: new LanguageInfo('ko', 'Korean', '한국어'),
     Lithuanian: new LanguageInfo('lt', 'Lithuanian', 'Lietuvių'),
-    NorwegianBokmal: new LanguageInfo(null, 'Norwegian (Bokmål)', 'Norsk Bokmål'),
+    NorwegianBokmal: new LanguageInfo(null, 'Norwegian (Bokmål)', 'Norsk Bokmål', 'NorwegianBokmal'),
     Polish: new LanguageInfo('pl', 'Polish', 'Polski'),
     Portuguese: new LanguageInfo('pt', 'Portuguese', 'Português'),
     Romanian: new LanguageInfo(null, 'Romanian', 'Română'),

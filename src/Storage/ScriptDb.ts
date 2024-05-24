@@ -91,5 +91,5 @@ export const setCurrentLanguage = async(info: LanguageInfo) => {
     const tr = db.transaction(SETTINGS_STORE, "readwrite");
     const store = tr.objectStore(SETTINGS_STORE);
 
-    await put<string>(store, info.englishName, SETTINGS_LANG_KEY);
+    await put<string>(store, info.key, SETTINGS_LANG_KEY);
 };
