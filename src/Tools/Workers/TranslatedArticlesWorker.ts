@@ -27,30 +27,32 @@ const localizeLink = (link: string, lang: LanguageInfo): string => {
         .join('/');
 };
 
+export type RedirectResult = {
+    /**
+     * The original English link
+     */
+    link: string
+
+    /**
+     * The English redirect target
+     */
+    redirectsTo: string
+
+    /**
+     * redirectsTo value with added language postfix
+     */
+    localizedRedirectTarget: string
+
+    /**
+     * Whether the localizedRedirectTarget page exists
+     */
+    exists: boolean
+};
+
 export type TranslatedArticlesResult = {
     existing: string[]
     notExisting: string[]
-    redirects: {
-        /**
-         * The original English link
-         */
-        link: string
-
-        /**
-         * The English redirect target
-         */
-        redirectsTo: string
-
-        /**
-         * redirectsTo value with added language postfix
-         */
-        localizedRedirectTarget: string
-
-        /**
-         * Whether the localizedRedirectTarget page exists
-         */
-        exists: boolean
-    }[]
+    redirects: RedirectResult[]
 };
 
 export class TranslatedArticlesWorker {

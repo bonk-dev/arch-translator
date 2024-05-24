@@ -11,6 +11,7 @@ import {WikiTextParser} from "./Utilities/WikiTextParser";
 import {getPageContent} from "./Utilities/MediaWikiClient";
 import {removeLanguagePostfix} from "./Internalization/I18nConstants";
 import {TranslatedArticlesWorker} from "./Tools/Workers/TranslatedArticlesWorker";
+import {addTranslatedArticlesUi, addWorkerResultToUi} from "./Tools/TranslatedArticlesUi";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -65,6 +66,8 @@ setupDb()
 
                 const pageInfo = getCurrentPageInfo();
                 if (pageInfo.pageType === PageType.CreateEditor || pageInfo.pageType === PageType.Editor) {
+                    addTranslatedArticlesUi(form);
+
                     const info = getCurrentPageInfo();
                     const englishContent = await getPageContent(removeLanguagePostfix(info.pageName));
                     const parser = new WikiTextParser();
@@ -76,6 +79,8 @@ setupDb()
                         .then(r => {
                             console.debug(r);
                             console.debug('Translated articles worker done');
+
+                            addWorkerResultToUi(r);
                         });
 
                     if (pageInfo.pageType === PageType.CreateEditor) {
