@@ -27,7 +27,7 @@ export class NewArticleWorker {
 
         const currentLanguage = await getCurrentLanguage();
         const englishRevisionId = await getEnglishRevisionId();
-        if (englishRevisionId) {
+        if (englishRevisionId == null) {
             console.warn('NewArticleWorker: englishRevisionId was null');
         }
 
