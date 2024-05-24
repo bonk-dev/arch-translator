@@ -1,8 +1,9 @@
-import {PageInfo, PageType} from "../../Utilities/PageUtils";
-import {WikiTextParser} from "../../Utilities/WikiTextParser";
+import {PageInfo, PageType, titleToPageName} from "../../Utilities/PageUtils";
+import {findRedirect, WikiTextParser} from "../../Utilities/WikiTextParser";
 import {getCurrentLanguage} from "../../Storage/ScriptDb";
 import {LanguageInfo, removeLanguagePostfix} from "../../Internalization/I18nConstants";
 import {
+    getPageContent,
     getPageInfos, getPageLinks,
     InfoQueryResultArray,
     InfoQueryResultKeyedObject
@@ -132,14 +133,29 @@ export class TranslatedArticlesWorker {
             });
         }
 
+        const data: LinkScanResult[] = [];
         const keyedApiData = apiData as InfoQueryResultKeyedObject;
-        return Object.values(keyedApiData.query.pages)
-            .map(pageInfo => {
+
+        if ("pages" in keyedApiData.query) {
+            const pageValues = Object.values(keyedApiData.query.pages);
+            data.push(...pageValues.map(pageInfo => {
                 return {
                     link: pageInfo.title,
                     exists: !("missing" in pageInfo)
                 };
-            });
+            }))
+        }
+        if ("interwiki" in keyedApiData.query) {
+            const interwikiValues = Object.values(keyedApiData.query.interwiki);
+            data.push(...interwikiValues.map(iwInfo => {
+                return {
+                    link: iwInfo.title,
+                    exists: false // Just assume it does not exist TODO: for now
+                };
+            }))
+        }
+
+        return data;
     }
 
     private async _findRedirects(links: string[]): Promise<RedirectScanResult[]> {
@@ -173,9 +189,24 @@ export class TranslatedArticlesWorker {
                 return {
                     link: l.title,
                     redirects: true,
-                    redirectsTo: l.links[0].title
+                    redirectsTo: "links" in l ? l.links[0].title : null
                 };
             });
+        for (const info of redirectsInfo) {
+            if (info.redirectsTo == null) {
+                console.warn(`API returned no links for the redirect "${info.link}". Fixing...`);
+                const content = await getPageContent(titleToPageName(info.link));
+                console.debug(content);
+
+                const redirectLink = findRedirect(content);
+                if (redirectLink == null) {
+                    throw new Error(`Could not get redirect target for link ${info.link}`);
+                }
+
+                info.redirectsTo = redirectLink.link;
+            }
+        }
+
         const nonRedirectsInfo = links
             .filter(l => !redirects.includes(l))
             .map(l => {

@@ -38,11 +38,17 @@ interface NormalizedInfo {
     to: string
 }
 
+interface InterwikiLinkInfo {
+    title: string
+    iw: string
+}
+
 export interface InfoQueryResultKeyedObject {
     batchComplete: any
     query: {
         normalized?: NormalizedInfo[]
         pages: { [key: string]: (RealPage|RedirectPage) }
+        interwiki: { [key: string]: InterwikiLinkInfo }
     }
 }
 
