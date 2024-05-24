@@ -59,6 +59,11 @@ export const addWorkerResultToUi = (result: TranslatedArticlesResult) => {
         throw new Error('editFormLocalizedArticlesTable was not created yet');
     }
 
+    if (result.existing.length <= 0 && result.redirects.length <= 0 && result.notExisting.length <= 0) {
+        tableBody.innerHTML = '<td class="muted-link" colspan="2">No links were found in the page content</td>';
+        return;
+    }
+
     tableBody.innerHTML = '';
 
     const existingRedirectCell = `<td class="muted-link" rowspan="${result.existing.length}">N/A</td>`
