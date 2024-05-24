@@ -12,7 +12,7 @@ export const addTranslatedArticlesUi = ($editForm: JQuery) => {
             <div class="localizedArticlesUi-toggler">
                 <p>AT - Localized articles:</p>
             </div>
-            <table>
+            <table class="wikitable mw-editfooter-list">
                 <thead>
                     <tr>
                         <th>Localized name</th>
