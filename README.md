@@ -4,7 +4,7 @@
 Useful tools for ArchWiki translators, now written in TypeScript.
 
 ## Usage
-- Install the UserScript
+- [Install the UserScript](https://greasyfork.org/en/scripts/495960-archtranslator)
 - Change the active language (the default is Polish):
 
 ![Change language tool](assets/change-lang.png)
