@@ -1,0 +1,20 @@
+/* Sadly, the Template:Yes and Template:No use inline styles and not CSS classes, so we need to include
+ our own stylesheet. Besides, there is no Template:Blue */
+
+.wikitable {
+    .green-link {
+        background: #afa;
+    }
+    .blue-link {
+        background: #aaf;
+    }
+    .red-link {
+        background: #faa;
+    }
+    .muted-link {
+        background: #d6d6d6;
+        text-align: center;
+        vertical-align: center;
+        font-size: .7rem;
+    }
+}

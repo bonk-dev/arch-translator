@@ -8,7 +8,10 @@ const ctx = await esbuild.context({
     entryPoints: ['src/index.ts'],
     bundle: true,
     outfile: tmpPath,
-    sourcemap: 'external'
+    sourcemap: 'external',
+    loader: {
+        '.css': 'text' // TODO: Minify the CSS file
+    }
 });
 
 const NEW_LINE_ASCII = 0x0A;

@@ -12,6 +12,9 @@ import {getPageContent} from "./Utilities/MediaWikiClient";
 import {removeLanguagePostfix} from "./Internalization/I18nConstants";
 import {TranslatedArticlesWorker} from "./Tools/Workers/TranslatedArticlesWorker";
 import {addTranslatedArticlesUi, addWorkerResultToUi} from "./Tools/TranslatedArticlesUi";
+import {injectCssCode} from "./Utilities/CssInjector";
+// @ts-ignore
+import tableCss from './Styles/WikiTable.css';
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -34,6 +37,7 @@ setupDb()
         const manager = new InjectionManager();
         manager.on(GenericLoadStep.DocumentLoad, () => {
             console.debug('Document loaded');
+            injectCssCode(tableCss);
         });
         manager.on(GenericLoadStep.MediaWikiStartup, () => {
             const api = getMwApi();
