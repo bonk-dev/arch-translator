@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import * as chokidar from 'chokidar';
 
 const tmpPath = 'build/arch-translator.js';
+const outWSrcMapPath = 'build/arch-translator.srcmap.user.js';
 const outPath = 'build/arch-translator.user.js';
 const ctx = await esbuild.context({
     entryPoints: ['src/index.ts'],
@@ -40,6 +41,11 @@ async function build() {
     const bundle = fs.readFileSync(tmpPath);
     const header = fs.readFileSync('src/uscript-header.txt');
 
+    const noSrcMapHandle = fs.openSync(outPath, 'w');
+    fs.writeSync(noSrcMapHandle, header, 0, header.length, 0);
+    fs.writeSync(noSrcMapHandle, bundle, 0, bundle.length, header.length);
+    fs.closeSync(noSrcMapHandle);
+
     const srcMap = JSON.parse(fs.readFileSync(tmpPath + '.map').toString());
     let srcMapOffset = '';
     for (let i = 0; i < countNewLines(header); ++i) {
@@ -47,7 +53,7 @@ async function build() {
     }
     srcMap['mappings'] = srcMapOffset + srcMap['mappings'];
 
-    const bundleHandle = fs.openSync(outPath, 'w');
+    const bundleHandle = fs.openSync(outWSrcMapPath, 'w');
     fs.writeSync(bundleHandle, header, 0, header.length, 0);
     fs.writeSync(bundleHandle, bundle, 0, bundle.length, header.length);
 
