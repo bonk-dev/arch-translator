@@ -12,6 +12,9 @@ Useful tools for ArchWiki translators, now written in TypeScript.
 ## Build
 You can build the script yourself:
 
+Clone the repo:
+`git clone https://github.com/bonk-dev/arch-translator.git`
+
 Remember to install the dev dependencies:
 `npm install`
 
