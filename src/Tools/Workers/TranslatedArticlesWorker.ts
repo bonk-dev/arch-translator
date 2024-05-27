@@ -4,10 +4,9 @@ import {getCurrentLanguage} from "../../Storage/ScriptDb";
 import {LanguageInfo, removeLanguagePostfix} from "../../Internalization/I18nConstants";
 import {
     getPageContent,
-    getPageInfos, getPageLinks,
-    InfoQueryResultArray,
-    InfoQueryResultKeyedObject
+    getPageInfos, getPageLinks
 } from "../../Utilities/Api/MediaWikiApiClient";
+import {InfoQueryResultArray, InfoQueryResultKeyedObject} from "../../Utilities/Api/MediaWikiApiTypes";
 
 type LinkScanResult = {
     link: string
