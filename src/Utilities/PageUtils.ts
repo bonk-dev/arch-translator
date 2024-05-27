@@ -15,24 +15,29 @@ export enum PageType {
     Read = 0,
 
     /**
+     * Read page of a non-existing article
+     */
+    ReadNonExisting = 1,
+
+    /**
      * Editing an existing page
      */
-    Editor = 1,
+    Editor = 2,
 
     /**
      * Creating a new page
      */
-    CreateEditor = 2,
+    CreateEditor = 3,
 
     /**
      * Viewing the source of an article (cannot edit due to lack of permissions)
      */
-    ViewOnlyEditor = 3,
+    ViewOnlyEditor = 4,
 
     /**
      * Other type of page (e.g. Recent changes)
      */
-    Other = 4
+    Other = 5
 }
 
 export type PageInfo = {
@@ -73,6 +78,14 @@ function getCurrentPageType(): PageType {
                 ? PageType.Editor
                 : PageType.ViewOnlyEditor;
         case 'view':
+            const revisionId = getMwApi()
+                .config
+                .values
+                .wgCurRevisionId;
+            if (revisionId === 0) {
+                return PageType.ReadNonExisting;
+            }
+
             return isArticle
                 ? PageType.Read
                 : PageType.Other;

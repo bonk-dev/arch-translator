@@ -1,10 +1,14 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiJsApi";
-import {getCurrentPageInfo, getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
+import {getCurrentPageInfo, getEnglishRevisionId, PageInfo, PageType} from "../Utilities/PageUtils";
 import {getCurrentLanguage, setCurrentLanguage} from "../Storage/ScriptDb";
 import {getLangInfoFor, LanguagesInfo} from "../Internalization/I18nConstants";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
+    const showCallback = (info: PageInfo) => {
+        return info.pageType !== PageType.CreateEditor && info.pageType !== PageType.ReadNonExisting;
+    };
+
     const toolHandler = async () => {
         const revisionId = getMwApi()
             .config
@@ -17,7 +21,8 @@ export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     return sideTool({
         name: "copy-current-revision-id",
         displayText: "Copy revision ID",
-        handler: toolHandler
+        handler: toolHandler,
+        showCallback: showCallback
     });
 };
 
