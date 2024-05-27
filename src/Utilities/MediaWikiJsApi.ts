@@ -124,7 +124,7 @@ interface MediaWikiLoader {
 }
 
 // There is a lot more than just config and hook(...), but I do not need anything else - for now at least.
-interface MediaWikiApi {
+interface MediaWikiJsApi {
     config: MediaWikiConfig
     hook(name: string): MediaWikiHookContext
     loader: MediaWikiLoader
@@ -135,7 +135,7 @@ export function isMwApiReady() {
     return typeof mw !== 'undefined';
 }
 
-export function getMwApi(): MediaWikiApi {
+export function getMwApi(): MediaWikiJsApi {
     // @ts-ignore
     return mw;
 }

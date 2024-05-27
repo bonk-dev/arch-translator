@@ -1,5 +1,5 @@
 import {DocumentLoadAgent, StartupLoadAgent} from "./InjectionAgents";
-import {getMwApi} from "../Utilities/MediaWikiApi";
+import {getMwApi} from "../Utilities/MediaWikiJsApi";
 
 export enum GenericLoadStep {
     /**

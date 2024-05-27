@@ -1,4 +1,4 @@
-import {getMwApi, isMwApiReady} from "../Utilities/MediaWikiApi";
+import {getMwApi, isMwApiReady} from "../Utilities/MediaWikiJsApi";
 
 export class DocumentLoadAgent {
     start() {

@@ -1,5 +1,5 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
-import {getMwApi} from "../Utilities/MediaWikiApi";
+import {getMwApi} from "../Utilities/MediaWikiJsApi";
 import {getCurrentPageInfo, getEnglishRevisionId, PageInfo} from "../Utilities/PageUtils";
 import {getCurrentLanguage, setCurrentLanguage} from "../Storage/ScriptDb";
 import {getLangInfoFor, LanguagesInfo} from "../Internalization/I18nConstants";
