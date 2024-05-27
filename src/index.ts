@@ -74,9 +74,11 @@ setupDb()
 
                 const pageInfo = getCurrentPageInfo();
                 if (pageInfo.pageType === PageType.CreateEditor || pageInfo.pageType === PageType.Editor) {
+                    const info = getCurrentPageInfo();
+                    if (!info.isTranslated) return;
+
                     addTranslatedArticlesUi(form);
 
-                    const info = getCurrentPageInfo();
                     const englishName = removeLanguagePostfix(info.pageName);
                     const englishContent = await getPageContent(englishName);
                     await setCachedPageInfo({
