@@ -17,6 +17,7 @@ import {injectCssCode} from "./Utilities/CssInjector";
 import tableCss from './Styles/WikiTable.css';
 // @ts-ignore
 import commonCss from './Styles/Common.css';
+import {CachedPageInfoType} from "./Storage/ScriptDbModels";
 
 // @ts-ignore
 globalThis.getMwApi = getMwApi;
@@ -76,7 +77,14 @@ setupDb()
                     addTranslatedArticlesUi(form);
 
                     const info = getCurrentPageInfo();
-                    const englishContent = await getPageContent(removeLanguagePostfix(info.pageName));
+                    const englishName = removeLanguagePostfix(info.pageName);
+                    const englishContent = await getPageContent(englishName);
+                    await setCachedPageInfo({
+                        pageName: englishName,
+                        type: CachedPageInfoType.English,
+                        latestRevisionId: englishContent.revisionId
+                    });
+
                     const parser = new WikiTextParser();
                     parser.parse(englishContent.content);
 
