@@ -1,6 +1,6 @@
 {
   "name": "arch-translator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Useful tools for ArchWiki translators, now written in TypeScript.",
   "main": "index.js",
   "scripts": {
