@@ -1,6 +1,6 @@
 import {EditMessage, getMwApi} from "./MediaWikiJsApi";
 import {isTranslated, removeLanguagePostfix} from "../Internalization/I18nConstants";
-import {getPageContent} from "./MediaWikiClient";
+import {getPageContent} from "./Api/MediaWikiApiClient";
 import {getCachedPageInfo} from "../Storage/ScriptDb";
 
 /**

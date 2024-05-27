@@ -7,7 +7,7 @@ import {
     getPageInfos, getPageLinks,
     InfoQueryResultArray,
     InfoQueryResultKeyedObject
-} from "../../Utilities/MediaWikiClient";
+} from "../../Utilities/Api/MediaWikiApiClient";
 
 type LinkScanResult = {
     link: string

@@ -8,7 +8,7 @@ import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
 import {CodeMirrorEditor} from "./Utilities/CodeMirrorTypes";
 import {NewArticleWorker} from "./Tools/Workers/NewArticleWorker";
 import {WikiTextParser} from "./Utilities/WikiTextParser";
-import {getPageContent} from "./Utilities/MediaWikiClient";
+import {getPageContent} from "./Utilities/Api/MediaWikiApiClient";
 import {removeLanguagePostfix} from "./Internalization/I18nConstants";
 import {TranslatedArticlesWorker} from "./Tools/Workers/TranslatedArticlesWorker";
 import {addTranslatedArticlesUi, addWorkerResultToUi} from "./Tools/TranslatedArticlesUi";
