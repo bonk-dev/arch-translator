@@ -78,7 +78,7 @@ setupDb()
                     const info = getCurrentPageInfo();
                     const englishContent = await getPageContent(removeLanguagePostfix(info.pageName));
                     const parser = new WikiTextParser();
-                    parser.parse(englishContent);
+                    parser.parse(englishContent.content);
 
                     const newTranslationWorker = new NewArticleWorker(pageInfo);
                     const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);

@@ -134,9 +134,9 @@ export async function getCurrentPageContent() {
         case PageType.ViewOnlyEditor:
             // TODO: Maybe do not rely on CodeMirror hook? Probably won't do much, the content is expected to be ready on doc load
             console.warn("cachedPageContent was null on edit page. You might be requesting the page content too soon.");
-            return await getPageContent(pageName);
+            return (await getPageContent(pageName)).content;
         case PageType.Read:
-            return await getPageContent(pageName);
+            return (await getPageContent(pageName)).content;
         case PageType.Other:
             throw new Error("Cannot return content for page of 'Other' type");
     }

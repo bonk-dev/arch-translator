@@ -1,15 +1,29 @@
-import {InfoQueryResultArray, InfoQueryResultKeyedObject, LinkQueryResult} from "./MediaWikiApiTypes";
+import {
+    GetPageContentResult,
+    InfoQueryResultArray,
+    InfoQueryResultKeyedObject,
+    LinkQueryResult, RevisionQueryResult
+} from "./MediaWikiApiTypes";
+import {titleToPageName} from "../PageUtils";
 
 /**
  * Fetches the latest revision page content (no caching)
  */
-export const getPageContent = async (pageName: string) => {
+export const getPageContent = async (pageName: string): Promise<GetPageContentResult> => {
     // In case someone passes in the title not the page name
     // (the page name has _ while the title has whitespace).
-    pageName = pageName.replaceAll(" ", "_");
+    pageName = titleToPageName(pageName);
 
-    const response = await fetch(`/index.php?title=${encodeURIComponent(pageName)}&action=raw`);
-    return await response.text();
+    const response = await fetch(
+        `/api.php?action=query&prop=revisions&titles=${pageName}&rvslots=*&rvprop=ids|content&format=json&formatversion=2`);
+    const jsonObj = await response.json() as RevisionQueryResult;
+
+    const revision = jsonObj.query.pages[0].revisions[0];
+    return {
+        revisionId: revision.revid,
+        content: revision.slots.main.content,
+        title: jsonObj.query.pages[0].title
+    };
 };
 
 /**

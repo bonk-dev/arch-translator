@@ -1,3 +1,31 @@
+export interface RevisionQueryResult {
+    batchComplete: boolean
+    query: {
+        pages: {
+            pageId: number
+            ns: number
+            title: string
+            revisions: {
+                revid: number
+                parentid: number
+                slots: {
+                    main: {
+                        contentmodel: string
+                        contentformat: string
+                        content: string
+                    }
+                }
+            }[]
+        }[]
+    }
+}
+
+export type GetPageContentResult = {
+    revisionId: number
+    content: string
+    title: string
+};
+
 interface BasePage {
     ns: number
     title: string

@@ -198,7 +198,7 @@ export class TranslatedArticlesWorker {
                 const content = await getPageContent(titleToPageName(info.link));
                 console.debug(content);
 
-                const redirectLink = findRedirect(content);
+                const redirectLink = findRedirect(content.content);
                 if (redirectLink == null) {
                     throw new Error(`Could not get redirect target for link ${info.link}`);
                 }
