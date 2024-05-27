@@ -2,7 +2,7 @@ import {GenericLoadStep, InjectionManager} from "./Injection/InjectionManager";
 import {getMwApi} from "./Utilities/MediaWikiJsApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/SidebarTools";
-import {getCachedPageInfo, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
+import {getCachedPageInfo, getCurrentLanguage, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
 import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo, PageType} from "./Utilities/PageUtils";
 import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
 import {CodeMirrorEditor} from "./Utilities/CodeMirrorTypes";
@@ -80,7 +80,10 @@ setupDb()
                     const parser = new WikiTextParser();
                     parser.parse(englishContent.content);
 
-                    const newTranslationWorker = new NewArticleWorker(pageInfo);
+                    const newTranslationWorker = new NewArticleWorker(
+                        pageInfo,
+                        await getCurrentLanguage(),
+                        englishContent.revisionId);
                     const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
                     translatedArticleWorker.run(parser)
                         .then(r => {
@@ -91,12 +94,8 @@ setupDb()
                         });
 
                     if (pageInfo.pageType === PageType.CreateEditor) {
-                        // no need to await translatedArticleWorker.run(...), it does not make any changes to the parser
-                        const workerPromises = [
-                            newTranslationWorker.run(parser)
-                        ];
+                        newTranslationWorker.run(parser);
 
-                        await Promise.all(workerPromises);
                         const newContent = parser.pageContent;
                         cacheCurrentPageContent(newContent);
                         cmEditor.setValue(newContent);

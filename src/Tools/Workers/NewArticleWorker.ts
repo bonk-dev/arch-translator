@@ -1,21 +1,24 @@
-import {getEnglishRevisionId, PageInfo, pageNameToTitle, PageType} from "../../Utilities/PageUtils";
-import {removeLanguagePostfix} from "../../Internalization/I18nConstants";
+import {PageInfo, pageNameToTitle, PageType} from "../../Utilities/PageUtils";
+import {LanguageInfo, removeLanguagePostfix} from "../../Internalization/I18nConstants";
 import {WikiTextParser} from "../../Utilities/WikiTextParser";
 import {buildTranslationStatusTemplate} from "../../Utilities/TemplateUtils";
-import {getCurrentLanguage} from "../../Storage/ScriptDb";
 
 export class NewArticleWorker {
-    private _info: PageInfo;
+    private readonly _info: PageInfo;
+    private readonly _language: LanguageInfo;
+    private readonly _englishRevisionId: number;
 
-    constructor(pageInfo: PageInfo) {
+    constructor(pageInfo: PageInfo, language: LanguageInfo, englishRevisionId: number) {
         this._info = pageInfo;
+        this._language = language;
+        this._englishRevisionId = englishRevisionId ?? 0;
     }
 
     willRun() {
         return this._info.pageType === PageType.CreateEditor && this._info.isTranslated;
     }
 
-    async run(parser: WikiTextParser){
+    run(parser: WikiTextParser){
         if (!this.willRun()) return;
         console.debug('NewArticleWorker: running');
 
@@ -25,17 +28,11 @@ export class NewArticleWorker {
         const englishTitle = pageNameToTitle(englishName);
         parser.addInterlanguageLink(`[[en:${englishTitle}]]`, 'en');
 
-        const currentLanguage = await getCurrentLanguage();
-        const englishRevisionId = await getEnglishRevisionId();
-        if (englishRevisionId == null) {
-            console.warn('NewArticleWorker: englishRevisionId was null');
-        }
-
         const translationStatus = buildTranslationStatusTemplate(
             englishName,
             new Date(),
-            englishRevisionId ?? 0,
-            currentLanguage);
+            this._englishRevisionId,
+            this._language);
         parser.addTemplate(translationStatus);
     }
 }
