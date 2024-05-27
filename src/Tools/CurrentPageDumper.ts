@@ -12,7 +12,7 @@ export const cacheCurrentPage = async () => {
 
     if (info.isRedirect) {
         const content = await getCurrentPageContent();
-        const redirectTarget = findRedirect(content.content);
+        const redirectTarget = findRedirect(content);
         if (redirectTarget == null) {
             throw new Error("The current page is a redirect but no redirect link was found");
         }
