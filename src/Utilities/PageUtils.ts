@@ -150,6 +150,8 @@ export async function getCurrentPageContent() {
             return (await getPageContent(pageName)).content;
         case PageType.Read:
             return (await getPageContent(pageName)).content;
+        case PageType.ReadNonExisting:
+            return "";
         case PageType.Other:
             throw new Error("Cannot return content for page of 'Other' type");
     }
