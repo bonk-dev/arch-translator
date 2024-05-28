@@ -6,6 +6,8 @@ import {
 } from "./MediaWikiApiTypes";
 import {titleToPageName} from "../PageUtils";
 
+const MAX_PAGE_QUERY_LIMIT = 50;
+
 /**
  * Fetches the latest revision page content (no caching)
  */
@@ -31,15 +33,55 @@ export const getPageContent = async (pageName: string): Promise<GetPageContentRe
  * @param titles
  */
 export const getPageInfos = async (titles: string[]): Promise<InfoQueryResultKeyedObject | InfoQueryResultArray> => {
-    const titleConcat = encodeURIComponent(titles.join('|'));
+    const fetchInfo = async (titles: string[]): Promise<InfoQueryResultKeyedObject | InfoQueryResultArray> => {
+        const encodedTitles = encodeURIComponent(titles.join('|'));
+        const apiResponse = await fetch(`/api.php?action=query&prop=info&titles=${encodedTitles}&format=json`);
+        if (!apiResponse.ok) {
+            throw new Error("API request failed: " + apiResponse.statusText);
+        }
 
-    // sometimes the API returns an array instead of an object, IDK why
-    const response = await fetch(`/api.php?action=query&prop=info&titles=${titleConcat}&format=json`);
-    if (!response.ok) {
-        throw new Error("API request failed: " + response.statusText);
+        return await apiResponse.json();
+    };
+    const groupLimit = <T>(bigArray: T[], limit: number): T[][] => {
+        if (limit <= 0) {
+            throw new Error("groupLimit 'limit' parameter must be larger than 0");
+        }
+
+        if (bigArray.length <= limit) {
+            return [bigArray];
+        }
+
+        const parentArray: T[][] = [];
+        let addedTitles = 0;
+        while (addedTitles < bigArray.length) {
+            const childArray: T[] = [];
+            const childSize = Math.min(bigArray.length - addedTitles, limit);
+            const startingIndex: number = addedTitles;
+
+            for (let i = 0; i < childSize; ++i) {
+                childArray.push(bigArray[i + startingIndex]);
+                addedTitles++;
+            }
+
+            parentArray.push(childArray);
+        }
+
+        return parentArray;
+    };
+
+    const groups = groupLimit(titles, MAX_PAGE_QUERY_LIMIT);
+
+    // I would love to Promise.all(...), but that could easily result in HTTP 429
+    // const responses = await Promise.all(groups.map(
+    //     titleGroup => fetchInfo(titleGroup)
+    // ));
+
+    const responses = [];
+    for (const titleGroup of groups) {
+        responses.push(await fetchInfo(titleGroup));
     }
 
-    return await response.json();
+    return Object.assign({}, ...responses);
 };
 
 /**
