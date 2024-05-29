@@ -33,6 +33,10 @@ export const getPageContent = async (pageName: string): Promise<GetPageContentRe
  * @param titles
  */
 export const getPageInfos = async (titles: string[]): Promise<InfoQueryResultKeyedObject | InfoQueryResultArray> => {
+    if (titles.length <= 0) {
+        throw new Error("Titles array must be larger than 0");
+    }
+
     const fetchInfo = async (titles: string[]): Promise<InfoQueryResultKeyedObject | InfoQueryResultArray> => {
         const encodedTitles = encodeURIComponent(titles.join('|'));
         const apiResponse = await fetch(`/api.php?action=query&prop=info&titles=${encodedTitles}&format=json`);
