@@ -87,8 +87,12 @@ setupDb()
                         latestRevisionId: englishContent.revisionId
                     });
 
+                    const contentToParse = pageInfo.pageType === PageType.CreateEditor
+                        ? englishContent.content
+                        : cmEditor.getValue();
+
                     const parser = new WikiTextParser();
-                    parser.parse(englishContent.content);
+                    parser.parse(contentToParse);
 
                     const newTranslationWorker = new NewArticleWorker(
                         pageInfo,
