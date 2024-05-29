@@ -1,7 +1,7 @@
 import {PageInfo, PageType, titleToPageName} from "../../Utilities/PageUtils";
 import {findRedirect, WikiTextParser} from "../../Utilities/WikiTextParser";
 import {getCurrentLanguage} from "../../Storage/ScriptDb";
-import {LanguageInfo, removeLanguagePostfix} from "../../Internalization/I18nConstants";
+import {isTranslated, LanguageInfo, removeLanguagePostfix} from "../../Internalization/I18nConstants";
 import {
     getPageContent,
     getPageInfos, getPageLinks
@@ -91,7 +91,7 @@ export class TranslatedArticlesWorker {
 
         // TODO: Handle weird redirects instead of ignoring them
         const actualRedirects = redirectsAndOther
-            .filter(r => r.redirects)
+            .filter(r => r.redirects && !isTranslated(r.redirectsTo!))
             .map(r => localizeLink(r.redirectsTo!, language));
         const redirectResults = actualRedirects.length > 0
             ? await this._getPageInfosFor(actualRedirects)
