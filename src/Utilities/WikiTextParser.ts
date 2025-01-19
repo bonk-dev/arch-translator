@@ -253,12 +253,17 @@ export class WikiTextParser {
  * @return string|null Redirect target page name or null if the content is not a redirect page
  */
 export const findRedirect = (wikiText: string): WikiLink|null => {
-    if (!wikiText.startsWith("#REDIRECT")) {
+    const prefix = "#REDIRECT ";
+    if (wikiText.length < prefix.length) {
+        return null;
+    }
+    const probablePrefix = wikiText.substring(0, prefix.length);
+    if (probablePrefix.toUpperCase() != prefix) {
         return null;
     }
 
     const linkText = wikiText
-        .substring("#REDIRECT ".length)
+        .substring(prefix.length)
         .trim();
     return new WikiLink(linkText);
 };
