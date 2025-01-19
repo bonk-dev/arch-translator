@@ -2,11 +2,17 @@ import {EditMessage, getMwApi} from "./MediaWikiJsApi";
 import {isTranslated, removeLanguagePostfix} from "../Internalization/I18nConstants";
 import {getPageContent} from "./Api/MediaWikiApiClient";
 import {getCachedPageInfo} from "../Storage/ScriptDb";
+import {CodeMirrorEditor} from "./CodeMirrorTypes";
 
 /**
  * Sometimes we do not need to fetch(...) for the raw page content (e.g. on edit pages).
  */
 let cachedPageContent: string|null = null;
+
+/**
+ * Storing the CodeMirror editor instance allows us to easily get it's current content
+ */
+let codeMirrorInstance: CodeMirrorEditor|null = null;
 
 export enum PageType {
     /**
@@ -129,10 +135,21 @@ export function cacheCurrentPageContent(content: string) {
     cachedPageContent = content;
 }
 
+/**
+ * Stores the CodeMirror editor instance
+ * @param cmEditor The editor instance
+ */
+export function storeCodeMirrorInstance(cmEditor: CodeMirrorEditor) {
+    codeMirrorInstance = cmEditor;
+}
+
 export async function getCurrentPageContent() {
-    if (cachedPageContent != null) {
+    if (codeMirrorInstance == null && cachedPageContent != null) {
         console.debug(`getCurrentPageContent: cache hit`);
         return cachedPageContent;
+    }
+    else if (codeMirrorInstance != null) {
+        return codeMirrorInstance.getValue();
     }
 
     const pageName = getMwApi()
