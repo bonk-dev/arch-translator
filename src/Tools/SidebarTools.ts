@@ -138,6 +138,19 @@ export const changeActiveLanguageTool = (): CustomSidebarTool => {
     });
 };
 
+export const refreshTranslatedArticles = (): CustomSidebarTool => {
+    const handler = async () => {
+        alert('not implemented');
+    };
+
+    return sideTool({
+       name: "refresh-translated-articles",
+       displayText: "Refresh translated articles",
+       handler: handler
+    });
+};
+
 export const allSidebarTools = [
-    changeActiveLanguageTool(), copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool(), createTranslationTool()
+    changeActiveLanguageTool(), copyCurrentRevisionIdTool(), copyEnglishRevisionIdTool(), createTranslationTool(),
+    refreshTranslatedArticles()
 ];
