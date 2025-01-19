@@ -108,9 +108,9 @@ export class TranslatedArticlesWorker {
 
         const findRedirectSource = (localizedLink: string): string => {
             const englishLink = removeLanguagePostfix(localizedLink);
-            if (englishLink === localizedLink) return localizedLink;
+            if (englishLink.toLowerCase() === localizedLink.toLowerCase()) return localizedLink;
 
-            const original = redirectsAndOther.find(r => r.redirectsTo === englishLink)!;
+            const original = redirectsAndOther.find(r => r.redirectsTo?.toLowerCase() === englishLink.toLowerCase())!;
             return original.link!;
         };
 
