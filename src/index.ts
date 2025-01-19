@@ -3,7 +3,13 @@ import {getMwApi} from "./Utilities/MediaWikiJsApi";
 import {ToolManager} from "./Tools/Utils/ToolManager";
 import {allSidebarTools} from "./Tools/SidebarTools";
 import {getCachedPageInfo, getCurrentLanguage, setCachedPageInfo, setupDb} from "./Storage/ScriptDb";
-import {cacheCurrentPageContent, getCurrentPageContent, getCurrentPageInfo, PageType} from "./Utilities/PageUtils";
+import {
+    cacheCurrentPageContent,
+    getCurrentPageContent,
+    getCurrentPageInfo,
+    PageType,
+    storeCodeMirrorInstance
+} from "./Utilities/PageUtils";
 import {cacheCurrentPage} from "./Tools/CurrentPageDumper";
 import {CodeMirrorEditor} from "./Utilities/CodeMirrorTypes";
 import {NewArticleWorker} from "./Tools/Workers/NewArticleWorker";
@@ -70,6 +76,7 @@ setupDb()
 
                 // @ts-ignore
                 const cmEditor = codeMirrorElement.get()[0].CodeMirror as CodeMirrorEditor;
+                storeCodeMirrorInstance(cmEditor);
                 cacheCurrentPageContent(cmEditor.getValue());
 
                 const pageInfo = getCurrentPageInfo();

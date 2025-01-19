@@ -80,6 +80,14 @@ export class TranslatedArticlesWorker {
         const linksWithPostfixes = parser
             .localizableLinks
             .map(l => localizeLink(l, language));
+        if (linksWithPostfixes.length <= 0) {
+            return {
+                existing: [],
+                notExisting: [],
+                redirects: []
+            };
+        }
+
         const info = await this._getPageInfosFor(linksWithPostfixes);
         console.debug(info.filter(i => i.exists));
 
@@ -100,9 +108,9 @@ export class TranslatedArticlesWorker {
 
         const findRedirectSource = (localizedLink: string): string => {
             const englishLink = removeLanguagePostfix(localizedLink);
-            if (englishLink === localizedLink) return localizedLink;
+            if (englishLink.toLowerCase() === localizedLink.toLowerCase()) return localizedLink;
 
-            const original = redirectsAndOther.find(r => r.redirectsTo === englishLink)!;
+            const original = redirectsAndOther.find(r => r.redirectsTo?.toLowerCase() === englishLink.toLowerCase())!;
             return original.link!;
         };
 
