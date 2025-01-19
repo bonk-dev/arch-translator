@@ -3,7 +3,7 @@
 // @namespace   bb89542e-b358-4be0-8c01-3797d1f3a1e3
 // @match       https://wiki.archlinux.org/*
 // @grant       none
-// @version     2.0.3
+// @version     2.0.4
 // @author      bonk-dev
 // @description Useful tools for ArchWiki translators, now written in TypeScript.
 // @icon        https://gitlab.archlinux.org/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png
