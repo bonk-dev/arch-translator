@@ -80,6 +80,14 @@ export class TranslatedArticlesWorker {
         const linksWithPostfixes = parser
             .localizableLinks
             .map(l => localizeLink(l, language));
+        if (linksWithPostfixes.length <= 0) {
+            return {
+                existing: [],
+                notExisting: [],
+                redirects: []
+            };
+        }
+
         const info = await this._getPageInfosFor(linksWithPostfixes);
         console.debug(info.filter(i => i.exists));
 
