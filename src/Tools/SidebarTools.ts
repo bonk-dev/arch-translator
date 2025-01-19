@@ -1,8 +1,17 @@
 import {CustomSidebarTool, sideTool} from "./Utils/ToolManager";
 import {getMwApi} from "../Utilities/MediaWikiJsApi";
-import {getCurrentPageInfo, getEnglishRevisionId, PageInfo, PageType} from "../Utilities/PageUtils";
+import {
+    getCurrentPageContent,
+    getCurrentPageInfo,
+    getEnglishRevisionId,
+    PageInfo,
+    PageType
+} from "../Utilities/PageUtils";
 import {getCurrentLanguage, setCurrentLanguage} from "../Storage/ScriptDb";
 import {getLangInfoFor, LanguagesInfo} from "../Internalization/I18nConstants";
+import {TranslatedArticlesWorker} from "./Workers/TranslatedArticlesWorker";
+import {addWorkerResultToUi} from "./TranslatedArticlesUi";
+import {WikiTextParser} from "../Utilities/WikiTextParser";
 
 export const copyCurrentRevisionIdTool = (): CustomSidebarTool => {
     const showCallback = (info: PageInfo) => {
@@ -140,7 +149,22 @@ export const changeActiveLanguageTool = (): CustomSidebarTool => {
 
 export const refreshTranslatedArticles = (): CustomSidebarTool => {
     const handler = async () => {
-        alert('not implemented');
+        console.debug('Rerunning translated articles worker');
+
+        const pageInfo = getCurrentPageInfo();
+        const contentToParse = await getCurrentPageContent();
+
+        const parser = new WikiTextParser();
+        parser.parse(contentToParse);
+
+        const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
+        translatedArticleWorker.run(parser)
+            .then(r => {
+                console.debug(r);
+                console.debug('Translated articles worker done');
+
+                addWorkerResultToUi(r);
+            });
     };
 
     return sideTool({
