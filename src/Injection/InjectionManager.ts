@@ -10,7 +10,12 @@ export enum GenericLoadStep {
     /**
      * Fired when the startup module gets loaded (which means the 'mw' API is active)
      */
-    MediaWikiStartup = 1
+    MediaWikiStartup = 1,
+
+    /**
+     * Fired when CodeMirror instance is ready
+     */
+    ExtCodeMirrorSwitch = 3,
 }
 enum SpecialLoadSteps {
     JQueryEditForm = 2
@@ -36,7 +41,8 @@ type EditFormCallbackInfo =
     };
 type Callbacks = {
     [GenericLoadStep.DocumentLoad]: GenericCallbackInfo
-    [GenericLoadStep.MediaWikiStartup]: GenericCallbackInfo
+    [GenericLoadStep.MediaWikiStartup]: GenericCallbackInfo,
+    [GenericLoadStep.ExtCodeMirrorSwitch]: GenericCallbackInfo,
     [SpecialLoadSteps.JQueryEditForm]: EditFormCallbackInfo
 };
 
@@ -56,6 +62,10 @@ export class InjectionManager {
             callbacks: [],
             fired: false
         },
+        [GenericLoadStep.ExtCodeMirrorSwitch]: {
+            callbacks: [],
+            fired: false
+        },
         [SpecialLoadSteps.JQueryEditForm]: {
             callbacks: [],
             fired: false,
@@ -67,6 +77,10 @@ export class InjectionManager {
     public startAgents() {
         onHookReady = () => {
             this.fire(GenericLoadStep.MediaWikiStartup);
+            getMwApi().hook('ext.CodeMirror.switch')
+                .add(() => {
+                   this.fire(GenericLoadStep.ExtCodeMirrorSwitch);
+                });
             getMwApi().hook('wikipage.editform')
                 .add((jQueryEditForm: JQuery) => {
                     this.fireEditForm(jQueryEditForm);
