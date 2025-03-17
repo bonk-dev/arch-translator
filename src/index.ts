@@ -39,6 +39,64 @@ globalThis.getContent = getCurrentPageContent;
 // wikieditor.editform can run multiple times
 let runEditHook = true;
 
+let editFormJQuery: JQuery<HTMLElement> | null = null;
+let codeMirrorFound = false;
+
+const initAfterCodeMirror = async (cmEditor: CodeMirrorEditor) => {
+    storeCodeMirrorInstance(cmEditor);
+    codeMirrorFound = true;
+    cacheCurrentPageContent(cmEditor.getValue());
+
+    if (editFormJQuery == null) {
+        // TODO: Try to find
+        throw new Error("editForm was null");
+    }
+
+    const pageInfo = getCurrentPageInfo();
+    if (pageInfo.pageType === PageType.CreateEditor || pageInfo.pageType === PageType.Editor) {
+        const info = getCurrentPageInfo();
+        if (!info.isTranslated) return;
+
+        addTranslatedArticlesUi(editFormJQuery);
+
+        const englishName = removeLanguagePostfix(info.pageName);
+        const englishContent = await getPageContent(englishName);
+        await setCachedPageInfo({
+            pageName: englishName,
+            type: CachedPageInfoType.English,
+            latestRevisionId: englishContent.revisionId
+        });
+
+        const contentToParse = pageInfo.pageType === PageType.CreateEditor
+            ? englishContent.content
+            : cmEditor.getValue();
+
+        const parser = new WikiTextParser();
+        parser.parse(contentToParse);
+
+        const newTranslationWorker = new NewArticleWorker(
+            pageInfo,
+            await getCurrentLanguage(),
+            englishContent.revisionId);
+        const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
+        translatedArticleWorker.run(parser)
+            .then(r => {
+                console.debug(r);
+                console.debug('Translated articles worker done');
+
+                addWorkerResultToUi(r);
+            });
+
+        if (pageInfo.pageType === PageType.CreateEditor) {
+            newTranslationWorker.run(parser);
+
+            const newContent = parser.pageContent;
+            cacheCurrentPageContent(newContent);
+            cmEditor.setValue(newContent);
+        }
+    }
+};
+
 setupDb()
     .then(() => {
         console.debug('ArchTranslator: setupDb successful');
@@ -64,64 +122,44 @@ setupDb()
             }
             ToolManager.instance.addSidebarToPage();
         });
+        manager.on(GenericLoadStep.ExtCodeMirrorSwitch, async () => {
+            if (codeMirrorFound) {
+                return;
+            }
+
+            const cmElement = $(".CodeMirror");
+            if (cmElement != null) {
+                // @ts-ignore
+                const cmEditor = cmElement.get()[0].CodeMirror as CodeMirrorEditor;
+                if (cmEditor == null) {
+                    console.error("Found .CodeMirror during the ExtCodeMirrorSwitch hook, but the JS editor instance was null");
+                }
+                else {
+                    console.debug("Found CodeMirror instance");
+                    await initAfterCodeMirror(cmEditor);
+                }
+            }
+            else {
+                console.error("Could not find .CodeMirror during the ExtCodeMirrorSwitch hook");
+            }
+        });
         manager.onEditForm(async (form) => {
-            if (!runEditHook) return;
+            if (!runEditHook || codeMirrorFound) return;
 
             console.debug('editform hook');
+            if (editFormJQuery == null) {
+                console.debug('editForm found');
+                editFormJQuery = form;
+            }
 
             const codeMirrorElement = form.find('.CodeMirror');
-            if (codeMirrorElement.length > 0) {
-                console.debug('CodeMirror found');
+            if (!codeMirrorFound && codeMirrorElement.length > 0) {
+                console.debug('CodeMirror found (editForm hook)');
                 runEditHook = false;
 
                 // @ts-ignore
                 const cmEditor = codeMirrorElement.get()[0].CodeMirror as CodeMirrorEditor;
-                storeCodeMirrorInstance(cmEditor);
-                cacheCurrentPageContent(cmEditor.getValue());
-
-                const pageInfo = getCurrentPageInfo();
-                if (pageInfo.pageType === PageType.CreateEditor || pageInfo.pageType === PageType.Editor) {
-                    const info = getCurrentPageInfo();
-                    if (!info.isTranslated) return;
-
-                    addTranslatedArticlesUi(form);
-
-                    const englishName = removeLanguagePostfix(info.pageName);
-                    const englishContent = await getPageContent(englishName);
-                    await setCachedPageInfo({
-                        pageName: englishName,
-                        type: CachedPageInfoType.English,
-                        latestRevisionId: englishContent.revisionId
-                    });
-
-                    const contentToParse = pageInfo.pageType === PageType.CreateEditor
-                        ? englishContent.content
-                        : cmEditor.getValue();
-
-                    const parser = new WikiTextParser();
-                    parser.parse(contentToParse);
-
-                    const newTranslationWorker = new NewArticleWorker(
-                        pageInfo,
-                        await getCurrentLanguage(),
-                        englishContent.revisionId);
-                    const translatedArticleWorker = new TranslatedArticlesWorker(pageInfo);
-                    translatedArticleWorker.run(parser)
-                        .then(r => {
-                            console.debug(r);
-                            console.debug('Translated articles worker done');
-
-                            addWorkerResultToUi(r);
-                        });
-
-                    if (pageInfo.pageType === PageType.CreateEditor) {
-                        newTranslationWorker.run(parser);
-
-                        const newContent = parser.pageContent;
-                        cacheCurrentPageContent(newContent);
-                        cmEditor.setValue(newContent);
-                    }
-                }
+                await initAfterCodeMirror(cmEditor);
             }
         });
 
